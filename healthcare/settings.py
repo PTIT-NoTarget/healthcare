@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -41,7 +42,13 @@ INSTALLED_APPS = [
     "auth_service",
     "doctor_service",
     "nurse_service",
-    "patient_service"
+    "patient_service",
+    "administrator_service",
+    "pharmacist_service",
+    "insurance_provider_service",
+    "laboratory_technician_service",
+    "medicine_service",
+    "pharmacy_service",
 ]
 
 REST_FRAMEWORK = {
@@ -98,16 +105,44 @@ WSGI_APPLICATION = "healthcare.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# Use environment variables or default for database configuration
+# This makes it work in both Docker and local development
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'healthcare',
-        'USER': 'root',
-        'PASSWORD': '12345678',
-        'HOST': 'localhost',
+        'NAME': 'healthcare_users',
+        'USER': 'healthcare',
+        'PASSWORD': 'healthcare_password',
+        'HOST': os.environ.get('DB_HOST_MYSQL', 'localhost'),  # Use 'mysql' when running in Docker
         'PORT': '3306',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+    },
+    'pharmacy_db': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'healthcare_pharmacy',
+        'USER': 'healthcare',
+        'PASSWORD': 'healthcare_password',
+        'HOST': os.environ.get('DB_HOST_POSTGRES', 'localhost'),  # Use 'postgres' when running in Docker
+        'PORT': '5432',
+        'OPTIONS': {
+            'sslmode': 'disable',  # Disable SSL for local development
+        },
+    },
+    # In development, use MongoDB without authentication for simplicity
+    'medicine_db': {
+        'ENGINE': 'djongo',
+        'NAME': 'healthcare_medicines',
+        'ENFORCE_SCHEMA': False,
+        'CLIENT': {
+            'host': f"mongodb://{os.environ.get('DB_HOST_MONGODB', 'localhost')}:27017",  # Use 'mongodb' when running in Docker
+        }
     }
 }
+
+# Database router for directing models to specific databases
+DATABASE_ROUTERS = ['healthcare.database_routers.DatabaseRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
