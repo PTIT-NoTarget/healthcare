@@ -28,4 +28,22 @@ urlpatterns = [
     path("api/doctors/", include("doctor_service.urls")),
     # Nurse Service
     path("api/nurses/", include("nurse_service.urls")),
+    # Administrator Service
+    path("api/administrators/", include("administrator_service.urls")),
+    # Pharmacist Service
+    path("api/pharmacists/", include("pharmacist_service.urls")),
+    # Insurance Provider Service
+    path("api/insurance-providers/", include("insurance_provider_service.urls")),
+    # Laboratory Technician Service
+    path("api/lab-technicians/", include("laboratory_technician_service.urls")),
+    # Medicine Service
+    path("api/medicines/", include("medicine_service.urls")),
+    # Pharmacy Service
+    path("api/pharmacies/", include("pharmacy_service.urls")),
+    # Inventory Service
+    path("api/inventory/", include("inventory_service.urls")),
+    # Payment Service
+    path("api/payments/", include("payment_service.urls")),
+    # Insurance Service
+    path("api/insurance/", include("insurance_service.urls")),
 ]

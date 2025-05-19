@@ -49,6 +49,9 @@ INSTALLED_APPS = [
     "laboratory_technician_service",
     "medicine_service",
     "pharmacy_service",
+    "inventory_service",
+    "payment_service",
+    "insurance_service",
 ]
 
 REST_FRAMEWORK = {
@@ -125,7 +128,7 @@ DATABASES = {
         'USER': 'healthcare',
         'PASSWORD': 'healthcare_password',
         'HOST': os.environ.get('DB_HOST_POSTGRES', 'localhost'),  # Use 'postgres' when running in Docker
-        'PORT': '5432',
+        'PORT': '5433',
         'OPTIONS': {
             'sslmode': 'disable',  # Disable SSL for local development
         },

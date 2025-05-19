@@ -53,4 +53,5 @@ class Medicine(models.Model):
         db_table = 'medicines'
 
     def __str__(self):
-        return f"{self.name} ({self.strength})" 
+        return f"{self.name} ({self.strength})"
+

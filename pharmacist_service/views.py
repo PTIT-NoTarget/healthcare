@@ -19,6 +19,24 @@ class PharmacistViewSet(viewsets.ModelViewSet):
             permission_classes = [IsPharmacist]
         return [permission() for permission in permission_classes]
     
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def activate(self, request, pk=None):
+        """Activate a pharmacist"""
+        pharmacist = self.get_object()
+        pharmacist.is_active = True
+        pharmacist.save()
+        serializer = self.get_serializer(pharmacist)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def deactivate(self, request, pk=None):
+        """Deactivate a pharmacist"""
+        pharmacist = self.get_object()
+        pharmacist.is_active = False
+        pharmacist.save()
+        serializer = self.get_serializer(pharmacist)
+        return Response(serializer.data)
+
     @action(detail=False, methods=['get'])
     def me(self, request):
         """
@@ -27,4 +45,5 @@ class PharmacistViewSet(viewsets.ModelViewSet):
         if hasattr(request.user, 'pharmacist'):
             serializer = self.get_serializer(request.user.pharmacist)
             return Response(serializer.data)
-        return Response({"detail": "User is not a pharmacist"}, status=404) 
+        return Response({"detail": "User is not a pharmacist"}, status=404)
+

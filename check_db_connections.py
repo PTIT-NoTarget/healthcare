@@ -36,7 +36,7 @@ def check_postgres_connection():
         # Make sure to specify the database name and disable SSL
         conn = psycopg2.connect(
             host="localhost",
-            port=5432,
+            port=5433,
             user="healthcare",
             password="healthcare_password",
             database="healthcare_pharmacy",

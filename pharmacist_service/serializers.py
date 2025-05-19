@@ -8,4 +8,4 @@ class PharmacistSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Pharmacist
-        fields = ['id', 'user', 'license_number', 'specialization', 'pharmacy_name'] 
+        fields = ['id', 'user', 'license_number', 'specialization', 'pharmacy_id', 'is_active', 'contact_phone', 'contact_email']
