@@ -46,4 +46,11 @@ urlpatterns = [
     path("api/payments/", include("payment_service.urls")),
     # Insurance Service
     path("api/insurance/", include("insurance_service.urls")),
+    # Prescription Service
+    path("api/prescriptions/", include("prescription_service.urls")),
+    # Medical Record Service
+    path("api/medical-records/", include("medical_record_service.urls")),
+    # Laboratory Service
+    path("api/laboratory/", include("laboratory_service.urls")),
+
 ]

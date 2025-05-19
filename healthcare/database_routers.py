@@ -11,6 +11,12 @@ class DatabaseRouter:
             return 'medicine_db'
         elif model._meta.app_label == 'pharmacy_service':
             return 'pharmacy_db'
+        elif model._meta.app_label == 'prescription_service':
+            return 'prescription_db'
+        elif model._meta.app_label == 'medical_record_service':
+            return 'medical_record_db'
+        elif model._meta.app_label == 'laboratory_service':
+            return 'laboratory_db'
         return 'default'
 
     def db_for_write(self, model, **hints):
@@ -22,6 +28,12 @@ class DatabaseRouter:
             return 'medicine_db'
         elif model._meta.app_label == 'pharmacy_service':
             return 'pharmacy_db'
+        elif model._meta.app_label == 'prescription_service':
+            return 'prescription_db'
+        elif model._meta.app_label == 'medical_record_service':
+            return 'medical_record_db'
+        elif model._meta.app_label == 'laboratory_service':
+            return 'laboratory_db'
         return 'default'
 
     def allow_relation(self, obj1, obj2, **hints):
@@ -31,6 +43,11 @@ class DatabaseRouter:
         """
         # Allow relations within same database
         if obj1._meta.app_label == obj2._meta.app_label:
+            return True
+        
+        # Allow relations within PostgreSQL databases
+        if obj1._meta.app_label in ['pharmacy_service', 'laboratory_service'] and \
+           obj2._meta.app_label in ['pharmacy_service', 'laboratory_service']:
             return True
         
         # Special case: allow relations between Pharmacy and related models from other apps
@@ -46,4 +63,10 @@ class DatabaseRouter:
             return db == 'medicine_db'
         elif app_label == 'pharmacy_service':
             return db == 'pharmacy_db'
+        elif app_label == 'prescription_service':
+            return db == 'prescription_db'
+        elif app_label == 'medical_record_service':
+            return db == 'medical_record_db'
+        elif app_label == 'laboratory_service':
+            return db == 'laboratory_db'
         return db == 'default' 

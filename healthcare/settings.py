@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "django_filters",
 
     # All Services
     "auth_service",
@@ -52,11 +53,17 @@ INSTALLED_APPS = [
     "inventory_service",
     "payment_service",
     "insurance_service",
+    "prescription_service",
+    "medical_record_service",
+    "laboratory_service",
 ]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
     ),
 }
 
@@ -141,6 +148,36 @@ DATABASES = {
         'CLIENT': {
             'host': f"mongodb://{os.environ.get('DB_HOST_MONGODB', 'localhost')}:27017",  # Use 'mongodb' when running in Docker
         }
+    },
+    # Prescription database using MongoDB
+    'prescription_db': {
+        'ENGINE': 'djongo',
+        'NAME': 'healthcare_prescriptions',
+        'ENFORCE_SCHEMA': False,
+        'CLIENT': {
+            'host': f"mongodb://{os.environ.get('DB_HOST_MONGODB', 'localhost')}:27017",  # Use 'mongodb' when running in Docker
+        }
+    },
+    # Medical Record database using MongoDB
+    'medical_record_db': {
+        'ENGINE': 'djongo',
+        'NAME': 'healthcare_medical_records',
+        'ENFORCE_SCHEMA': False,
+        'CLIENT': {
+            'host': f"mongodb://{os.environ.get('DB_HOST_MONGODB', 'localhost')}:27017",  # Use 'mongodb' when running in Docker
+        }
+    },
+    # Laboratory database using PostgreSQL
+    'laboratory_db': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'healthcare_laboratory',
+        'USER': 'healthcare',
+        'PASSWORD': 'healthcare_password',
+        'HOST': os.environ.get('DB_HOST_POSTGRES', 'localhost'),  # Use 'postgres' when running in Docker
+        'PORT': '5432',
+        'OPTIONS': {
+            'sslmode': 'disable',  # Disable SSL for local development
+        },
     }
 }
 
