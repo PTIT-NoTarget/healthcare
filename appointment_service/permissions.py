@@ -1,5 +1,4 @@
 from rest_framework import permissions
-from auth_service.models import UserRole
 
 
 class IsProvider(permissions.BasePermission):
@@ -8,9 +7,9 @@ class IsProvider(permissions.BasePermission):
     """
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role in [
-            UserRole.DOCTOR, 
-            UserRole.NURSE, 
-            UserRole.LAB_TECHNICIAN
+            'DOCTOR',
+            'NURSE',
+            'LAB_TECHNICIAN'
         ]
 
 
@@ -20,7 +19,7 @@ class IsAppointmentProvider(permissions.BasePermission):
     """
     def has_object_permission(self, request, view, obj):
         return request.user.is_authenticated and (
-            request.user.role in [UserRole.DOCTOR, UserRole.NURSE, UserRole.LAB_TECHNICIAN] and 
+            request.user.role in ['DOCTOR', 'NURSE', 'LAB_TECHNICIAN'] and
             str(request.user.id) == obj.provider_id
         )
 
@@ -31,7 +30,7 @@ class IsAppointmentPatient(permissions.BasePermission):
     """
     def has_object_permission(self, request, view, obj):
         return request.user.is_authenticated and (
-            request.user.role == UserRole.PATIENT and 
+            request.user.role == 'PATIENT' and
             str(request.user.id) == obj.patient_id
         )
 
@@ -41,7 +40,7 @@ class IsPatient(permissions.BasePermission):
     Custom permission to only allow patients to book appointments.
     """
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.role == UserRole.PATIENT
+        return request.user.is_authenticated and request.user.role == 'PATIENT'
 
 
 class IsAdministrator(permissions.BasePermission):
@@ -49,7 +48,7 @@ class IsAdministrator(permissions.BasePermission):
     Custom permission to only allow administrators to perform certain actions.
     """
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.role == UserRole.ADMINISTRATOR
+        return request.user.is_authenticated and request.user.role == 'ADMINISTRATOR'
 
 
 class IsTimeSlotProvider(permissions.BasePermission):
@@ -58,7 +57,7 @@ class IsTimeSlotProvider(permissions.BasePermission):
     """
     def has_object_permission(self, request, view, obj):
         return request.user.is_authenticated and (
-            request.user.role in [UserRole.DOCTOR, UserRole.NURSE, UserRole.LAB_TECHNICIAN] and 
+            request.user.role in ['DOCTOR', 'NURSE', 'LAB_TECHNICIAN'] and
             str(request.user.id) == obj.provider_id
         )
 
@@ -69,6 +68,7 @@ class IsRecurringPatternProvider(permissions.BasePermission):
     """
     def has_object_permission(self, request, view, obj):
         return request.user.is_authenticated and (
-            request.user.role in [UserRole.DOCTOR, UserRole.NURSE, UserRole.LAB_TECHNICIAN] and 
+            request.user.role in ['DOCTOR', 'NURSE', 'LAB_TECHNICIAN'] and
             str(request.user.id) == obj.provider_id
-        ) 
+        )
+

@@ -1,166 +1,266 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize variables
-    const appointmentsList = document.getElementById('appointmentsList');
-    const appointmentForm = document.getElementById('appointmentForm');
-    const saveAppointmentBtn = document.getElementById('saveAppointment');
-    const dateFilter = document.getElementById('dateFilter');
-    const statusFilter = document.getElementById('statusFilter');
-    const doctorFilter = document.getElementById('doctorFilter');
-    const doctorSelect = document.getElementById('doctorSelect');
+// Constants
+const API_BASE_URL = '/api';
 
-    // Load initial data
-    loadDoctors();
-    loadAppointments();
+// Utility functions
+const formatDateTime = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
 
-    // Event listeners
-    dateFilter.addEventListener('change', filterAppointments);
-    statusFilter.addEventListener('change', filterAppointments);
-    doctorFilter.addEventListener('change', filterAppointments);
-    saveAppointmentBtn.addEventListener('click', saveAppointment);
+// Load appointments based on filters
+async function loadAppointments(filters = {}) {
+    try {
+        let queryParams = new URLSearchParams(filters);
+        const response = await fetch(`${API_BASE_URL}/appointments/?${queryParams}`);
+        const appointments = await response.json();
 
-    // Function to load doctors for the dropdown
-    async function loadDoctors() {
-        try {
-            const response = await fetch('/api/doctors/');
-            const doctors = await response.json();
+        const appointmentsList = document.getElementById('appointmentsList');
+        appointmentsList.innerHTML = '';
 
-            // Populate doctor select in filters
-            const filterOptions = doctors.map(doctor =>
-                `<option value="${doctor.id}">${doctor.name}</option>`
-            );
-            doctorFilter.innerHTML += filterOptions.join('');
-
-            // Populate doctor select in new appointment form
-            doctorSelect.innerHTML = filterOptions.join('');
-        } catch (error) {
-            console.error('Error loading doctors:', error);
-        }
-    }
-
-    // Function to load appointments
-    async function loadAppointments() {
-        try {
-            const response = await fetch('/api/appointments/');
-            const appointments = await response.json();
-            displayAppointments(appointments);
-        } catch (error) {
-            console.error('Error loading appointments:', error);
-        }
-    }
-
-    // Function to display appointments
-    function displayAppointments(appointments) {
-        appointmentsList.innerHTML = appointments.map(appointment => `
-            <div class="col-md-6 mb-3">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 class="card-title">Dr. ${appointment.doctor_name}</h5>
-                            <span class="badge bg-${getStatusBadgeClass(appointment.status)}">${appointment.status}</span>
-                        </div>
-                        <p class="card-text">
-                            <i class="fas fa-calendar"></i> ${formatDateTime(appointment.datetime)}<br>
-                            <i class="fas fa-user"></i> Patient: ${appointment.patient_name}<br>
-                            <i class="fas fa-notes-medical"></i> Reason: ${appointment.reason}
-                        </p>
-                        <div class="d-flex justify-content-end gap-2">
-                            <button class="btn btn-sm btn-outline-primary" onclick="editAppointment(${appointment.id})">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="cancelAppointment(${appointment.id})">
-                                <i class="fas fa-times"></i> Cancel
-                            </button>
+        appointments.forEach(appointment => {
+            const appointmentHtml = `
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="card-title">Dr. ${appointment.provider_name}</h5>
+                                <span class="badge bg-${getStatusBadgeColor(appointment.status)}">${appointment.status}</span>
+                            </div>
+                            <p class="card-text">
+                                <i class="fas fa-calendar"></i> ${formatDateTime(appointment.time_slot.start_time)}<br>
+                                <i class="fas fa-user"></i> Patient: ${appointment.patient_name}<br>
+                                <i class="fas fa-notes-medical"></i> Reason: ${appointment.reason}
+                            </p>
+                            <div class="d-flex justify-content-end gap-2">
+                                ${getAppointmentActions(appointment)}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+            appointmentsList.insertAdjacentHTML('beforeend', appointmentHtml);
+        });
+    } catch (error) {
+        console.error('Error loading appointments:', error);
+        showErrorAlert('Failed to load appointments');
+    }
+}
+
+// Get appointment action buttons based on status
+function getAppointmentActions(appointment) {
+    const actions = [];
+
+    if (appointment.status === 'SCHEDULED') {
+        actions.push(`
+            <button class="btn btn-sm btn-outline-primary" onclick="editAppointment('${appointment.id}')">
+                <i class="fas fa-edit"></i> Edit
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="cancelAppointment('${appointment.id}')">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+        `);
+    } else if (appointment.status === 'CONFIRMED') {
+        actions.push(`
+            <button class="btn btn-sm btn-outline-success" onclick="checkInAppointment('${appointment.id}')">
+                <i class="fas fa-check"></i> Check In
+            </button>
+        `);
     }
 
-    // Function to save new appointment
-    async function saveAppointment() {
-        const formData = {
-            doctor_id: doctorSelect.value,
-            date: document.getElementById('appointmentDate').value,
-            time: document.getElementById('appointmentTime').value,
-            reason: document.getElementById('appointmentReason').value
-        };
+    return actions.join('');
+}
 
-        try {
-            const response = await fetch('/api/appointments/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                },
-                body: JSON.stringify(formData)
-            });
+// Get status badge color
+function getStatusBadgeColor(status) {
+    const statusColors = {
+        'SCHEDULED': 'primary',
+        'CONFIRMED': 'info',
+        'CHECKED_IN': 'warning',
+        'IN_PROGRESS': 'warning',
+        'COMPLETED': 'success',
+        'CANCELLED': 'danger',
+        'NO_SHOW': 'secondary'
+    };
+    return statusColors[status] || 'primary';
+}
 
-            if (response.ok) {
-                // Close modal and reload appointments
-                const modal = bootstrap.Modal.getInstance(document.getElementById('newAppointmentModal'));
-                modal.hide();
-                loadAppointments();
-                appointmentForm.reset();
-            } else {
-                throw new Error('Failed to save appointment');
-            }
-        } catch (error) {
-            console.error('Error saving appointment:', error);
-            alert('Failed to save appointment. Please try again.');
+// Handle appointment creation
+document.getElementById('appointmentForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = {
+        patient_id: document.getElementById('patientSelect').value,
+        provider_id: document.getElementById('doctorSelect').value,
+        provider_type: 'DOCTOR',
+        appointment_type: 'CONSULTATION',
+        time_slot: document.getElementById('appointmentTime').value,
+        reason: document.getElementById('appointmentReason').value
+    };
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/appointments/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+            $('#newAppointmentModal').modal('hide');
+            await loadAppointments();
+            showSuccessAlert('Appointment scheduled successfully');
+        } else {
+            throw new Error('Failed to schedule appointment');
         }
-    }
-
-    // Helper function to format date and time
-    function formatDateTime(datetime) {
-        return new Date(datetime).toLocaleString();
-    }
-
-    // Helper function to get badge class based on status
-    function getStatusBadgeClass(status) {
-        const statusClasses = {
-            'scheduled': 'primary',
-            'completed': 'success',
-            'canceled': 'danger'
-        };
-        return statusClasses[status.toLowerCase()] || 'secondary';
-    }
-
-    // Function to filter appointments
-    function filterAppointments() {
-        // Implementation will be added based on backend API
-        loadAppointments();
+    } catch (error) {
+        console.error('Error creating appointment:', error);
+        showErrorAlert('Failed to schedule appointment');
     }
 });
 
-// Function to edit appointment
-function editAppointment(appointmentId) {
-    // Implementation will be added
-    console.log('Edit appointment:', appointmentId);
+// Handle filter changes
+document.getElementById('dateFilter')?.addEventListener('change', (e) => {
+    const filters = getActiveFilters();
+    loadAppointments(filters);
+});
+
+document.getElementById('statusFilter')?.addEventListener('change', (e) => {
+    const filters = getActiveFilters();
+    loadAppointments(filters);
+});
+
+document.getElementById('doctorFilter')?.addEventListener('change', (e) => {
+    const filters = getActiveFilters();
+    loadAppointments(filters);
+});
+
+// Get active filters
+function getActiveFilters() {
+    const filters = {};
+
+    const dateFilter = document.getElementById('dateFilter')?.value;
+    const statusFilter = document.getElementById('statusFilter')?.value;
+    const doctorFilter = document.getElementById('doctorFilter')?.value;
+
+    if (dateFilter && dateFilter !== 'all') {
+        const today = new Date();
+        if (dateFilter === 'today') {
+            filters.start_date = today.toISOString().split('T')[0];
+            filters.end_date = today.toISOString().split('T')[0];
+        } else if (dateFilter === 'week') {
+            const weekLater = new Date(today.setDate(today.getDate() + 7));
+            filters.start_date = new Date().toISOString().split('T')[0];
+            filters.end_date = weekLater.toISOString().split('T')[0];
+        } else if (dateFilter === 'month') {
+            const monthLater = new Date(today.setMonth(today.getMonth() + 1));
+            filters.start_date = new Date().toISOString().split('T')[0];
+            filters.end_date = monthLater.toISOString().split('T')[0];
+        }
+    }
+
+    if (statusFilter && statusFilter !== 'all') {
+        filters.status = statusFilter.toUpperCase();
+    }
+
+    if (doctorFilter && doctorFilter !== 'all') {
+        filters.provider_id = doctorFilter;
+    }
+
+    return filters;
 }
 
-// Function to cancel appointment
+// Load doctors for filter and new appointment form
+async function loadDoctors() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/doctors/`);
+        const doctors = await response.json();
+
+        const doctorFilter = document.getElementById('doctorFilter');
+        const doctorSelect = document.getElementById('doctorSelect');
+
+        doctors.forEach(doctor => {
+            const option = new Option(`Dr. ${doctor.first_name} ${doctor.last_name}`, doctor.user_id);
+            doctorFilter?.add(option.cloneNode(true));
+            doctorSelect?.add(option);
+        });
+    } catch (error) {
+        console.error('Error loading doctors:', error);
+        showErrorAlert('Failed to load doctors list');
+    }
+}
+
+// Cancel appointment
 async function cancelAppointment(appointmentId) {
     if (!confirm('Are you sure you want to cancel this appointment?')) {
         return;
     }
 
     try {
-        const response = await fetch(`/api/appointments/${appointmentId}/cancel/`, {
+        const response = await fetch(`${API_BASE_URL}/appointments/${appointmentId}/cancel/`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            }
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                cancellation_reason: 'Cancelled by user',
+                cancelled_by: localStorage.getItem('userId')
+            })
         });
 
         if (response.ok) {
-            // Reload appointments to reflect the change
-            loadAppointments();
+            await loadAppointments(getActiveFilters());
+            showSuccessAlert('Appointment cancelled successfully');
         } else {
             throw new Error('Failed to cancel appointment');
         }
     } catch (error) {
-        console.error('Error canceling appointment:', error);
-        alert('Failed to cancel appointment. Please try again.');
+        console.error('Error cancelling appointment:', error);
+        showErrorAlert('Failed to cancel appointment');
     }
 }
+
+// Check in appointment
+async function checkInAppointment(appointmentId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/appointments/${appointmentId}/check_in/`, {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            await loadAppointments(getActiveFilters());
+            showSuccessAlert('Patient checked in successfully');
+        } else {
+            throw new Error('Failed to check in patient');
+        }
+    } catch (error) {
+        console.error('Error checking in patient:', error);
+        showErrorAlert('Failed to check in patient');
+    }
+}
+
+// UI helper functions
+function showSuccessAlert(message) {
+    // Implement your alert UI here
+    alert(message);
+}
+
+function showErrorAlert(message) {
+    // Implement your alert UI here
+    alert(message);
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', () => {
+    loadDoctors();
+    loadAppointments();
+});
+
+
+

@@ -56,7 +56,8 @@ INSTALLED_APPS = [
     "prescription_service",
     "medical_record_service",
     "laboratory_service",
-    "template_service",  # Added template_service
+    "template_service",
+    "appointment_service"
 ]
 
 REST_FRAMEWORK = {
@@ -275,4 +276,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Shared secret for internal service-to-service communication
 # IMPORTANT: Change this key to a strong, unique value and keep it secret!
+
 

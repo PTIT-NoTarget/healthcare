@@ -48,29 +48,29 @@
     <!-- Appointments List -->
     <div class="row" id="appointmentsList">
         <!-- Appointments will be loaded here dynamically -->
-        <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="card-title">Dr. John Smith</h5>
-                        <span class="badge bg-primary">Scheduled</span>
-                    </div>
-                    <p class="card-text">
-                        <i class="fas fa-calendar"></i> May 20, 2025 10:00 AM<br>
-                        <i class="fas fa-user"></i> Patient: Jane Doe<br>
-                        <i class="fas fa-notes-medical"></i> Reason: General Checkup
-                    </p>
-                    <div class="d-flex justify-content-end gap-2">
-                        <button class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+{#        <div class="col-md-6 mb-3">#}
+{#            <div class="card">#}
+{#                <div class="card-body">#}
+{#                    <div class="d-flex justify-content-between align-items-center mb-2">#}
+{#                        <h5 class="card-title">Dr. John Smith</h5>#}
+{#                        <span class="badge bg-primary">Scheduled</span>#}
+{#                    </div>#}
+{#                    <p class="card-text">#}
+{#                        <i class="fas fa-calendar"></i> May 20, 2025 10:00 AM<br>#}
+{#                        <i class="fas fa-user"></i> Patient: Jane Doe<br>#}
+{#                        <i class="fas fa-notes-medical"></i> Reason: General Checkup#}
+{#                    </p>#}
+{#                    <div class="d-flex justify-content-end gap-2">#}
+{#                        <button class="btn btn-sm btn-outline-primary">#}
+{#                            <i class="fas fa-edit"></i> Edit#}
+{#                        </button>#}
+{#                        <button class="btn btn-sm btn-outline-danger">#}
+{#                            <i class="fas fa-times"></i> Cancel#}
+{#                        </button>#}
+{#                    </div>#}
+{#                </div>#}
+{#            </div>#}
+{#        </div>#}
     </div>
 </div>
 
@@ -116,3 +116,4 @@
 {% block extra_js %}
 <script src="{% static 'js/appointments.js' %}"></script>
 {% endblock %}
+

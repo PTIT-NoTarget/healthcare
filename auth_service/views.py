@@ -87,3 +87,11 @@ class ProfileUpdateView(generics.UpdateAPIView):
 
         return Response(serializer.data)
 
+
+# New view for internal service communication
+class InternalUserDetailView(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.AllowAny]  # Changed to AllowAny
+    lookup_field = 'id'
+

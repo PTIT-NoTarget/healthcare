@@ -90,4 +90,4 @@ class ProviderScheduleSerializer(serializers.Serializer):
 
 class CancelAppointmentSerializer(serializers.Serializer):
     cancellation_reason = serializers.CharField(allow_blank=False)
-    cancelled_by = serializers.CharField(max_length=50) 
+

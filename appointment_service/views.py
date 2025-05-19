@@ -172,8 +172,8 @@ class TimeSlotViewSet(viewsets.ModelViewSet):
             )
         
         # Only the provider or an administrator can generate slots from their pattern
-        if (pattern.provider_id != str(request.user.id) and 
-            request.user.role not in [UserRole.ADMINISTRATOR]):
+        if (pattern.provider_id != str(request.user.id) and
+            request.user.role not in ['ADMINISTRATOR']):
             return Response(
                 {"error": "You don't have permission to generate slots from this pattern"},
                 status=status.HTTP_403_FORBIDDEN
@@ -245,10 +245,18 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     """
     queryset = Appointment.objects.all()
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['patient_id', 'provider_id', 'provider_type', 'status', 'appointment_type']
+    # Updated filterset_fields to support date range filtering on time_slot__start_time
+    filterset_fields = {
+        'patient_id': ['exact'],
+        'provider_id': ['exact'],
+        'provider_type': ['exact'],
+        'status': ['exact'],
+        'appointment_type': ['exact'],
+        'time_slot__start_time': ['gte', 'lte'] # Allows filtering like ?time_slot__start_time__gte=YYYY-MM-DD&time_slot__start_time__lte=YYYY-MM-DD
+    }
     search_fields = ['appointment_id', 'reason', 'notes']
     ordering_fields = ['time_slot__start_time', 'created_at']
-    
+
     def get_serializer_class(self):
         if self.action == 'create':
             return AppointmentCreateSerializer
@@ -277,15 +285,15 @@ class AppointmentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Generate a unique appointment ID
         appointment_id = f"APT-{uuid.uuid4().hex[:8].upper()}"
-        
+
         # If patient is creating the appointment, use their ID
-        if self.request.user.role == UserRole.PATIENT:
+        if self.request.user.role == 'PATIENT':
             serializer.save(
-                appointment_id=appointment_id, 
+                appointment_id=appointment_id,
                 patient_id=str(self.request.user.id),
                 created_by=str(self.request.user.id)
             )
-        elif self.request.user.role in [UserRole.DOCTOR, UserRole.NURSE, UserRole.LAB_TECHNICIAN]:
+        elif self.request.user.role in ['DOCTOR', 'NURSE', 'LAB_TECHNICIAN']:
             # If provider is creating the appointment, use their ID if it matches
             if 'provider_id' not in serializer.validated_data:
                 serializer.save(
@@ -306,39 +314,34 @@ class AppointmentViewSet(viewsets.ModelViewSet):
                 appointment_id=appointment_id,
                 created_by=str(self.request.user.id)
             )
-    
+
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
         """Cancel an appointment"""
         appointment = self.get_object()
         
-        serializer = CancelAppointmentSerializer(data=request.data)
+        serializer = CancelAppointmentSerializer(data=request.data) # Serializer now only expects cancellation_reason
         if serializer.is_valid():
-            # Check if the appointment can be cancelled
             if appointment.status in ['COMPLETED', 'CANCELLED', 'NO_SHOW']:
                 return Response(
                     {"error": f"Cannot cancel appointment in {appointment.status} status"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Update appointment status
             appointment.status = 'CANCELLED'
             appointment.cancellation_reason = serializer.validated_data['cancellation_reason']
-            appointment.cancelled_by = serializer.validated_data['cancelled_by']
+            appointment.cancelled_by = str(request.user.id) # Set cancelled_by from authenticated user
             appointment.save()
             
-            # Mark the time slot as available again
             time_slot = appointment.time_slot
             time_slot.is_available = True
             time_slot.save()
             
-            # Cancel any pending reminders
             Reminder.objects.filter(
                 appointment=appointment, 
                 status='PENDING'
             ).update(status='CANCELLED')
             
-            # Return the updated appointment
             response_serializer = self.get_serializer(appointment)
             return Response(response_serializer.data)
             
@@ -395,7 +398,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             )
         
         # If the user is a patient, they can only access their own appointments
-        if request.user.role == UserRole.PATIENT and str(request.user.id) != patient_id:
+        if request.user.role == 'PATIENT' and str(request.user.id) != patient_id:
             return Response(
                 {"error": "You can only access your own appointments"},
                 status=status.HTTP_403_FORBIDDEN
@@ -416,7 +419,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             )
         
         # If the user is a provider, they can only access their own appointments
-        if request.user.role in [UserRole.DOCTOR, UserRole.NURSE, UserRole.LAB_TECHNICIAN] and str(request.user.id) != provider_id:
+        if request.user.role in ['DOCTOR', 'NURSE', 'LAB_TECHNICIAN'] and str(request.user.id) != provider_id:
             return Response(
                 {"error": "You can only access your own appointments"},
                 status=status.HTTP_403_FORBIDDEN
@@ -438,7 +441,7 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         date_param = serializer.validated_data['date']
         
         # If the user is a provider, they can only access their own schedule
-        if request.user.role in [UserRole.DOCTOR, UserRole.NURSE, UserRole.LAB_TECHNICIAN] and str(request.user.id) != provider_id:
+        if request.user.role in ['DOCTOR', 'NURSE', 'LAB_TECHNICIAN'] and str(request.user.id) != provider_id:
             return Response(
                 {"error": "You can only access your own schedule"},
                 status=status.HTTP_403_FORBIDDEN
@@ -539,7 +542,7 @@ class RecurringPatternViewSet(viewsets.ModelViewSet):
         pattern_id = f"PATTERN-{uuid.uuid4().hex[:6].upper()}"
         
         # If provider is creating the pattern, use their ID
-        if self.request.user.role in [UserRole.DOCTOR, UserRole.NURSE, UserRole.LAB_TECHNICIAN]:
+        if self.request.user.role in ['DOCTOR', 'NURSE', 'LAB_TECHNICIAN']:
             serializer.save(
                 pattern_id=pattern_id,
                 provider_id=str(self.request.user.id),
