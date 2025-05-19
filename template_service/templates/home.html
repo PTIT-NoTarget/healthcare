@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Home - Healthcare App{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div id="welcomeMessage" class="mb-4">
+        <h2>Welcome to the Healthcare Management System!</h2>
+        <p>Your central hub for managing healthcare operations efficiently.</p>
+    </div>
+
+    <div class="row">
+        <!-- Example Card 1: Appointments -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-alt fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title">Appointments</h5>
+                    <p class="card-text">Manage patient appointments, schedule new ones, and view upcoming visits.</p>
+                    <a href="{% url 'appointments' %}" class="btn btn-primary">Go to Appointments</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example Card 2: Patient Records -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x mb-3 text-success"></i>
+                    <h5 class="card-title">Patient Records</h5>
+                    <p class="card-text">Access and update patient medical histories, and manage patient information.</p>
+                    <a href="{% url 'patient_records' %}" class="btn btn-success">Go to Patient Records</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example Card 3: Prescriptions -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-pills fa-3x mb-3 text-info"></i>
+                    <h5 class="card-title">Prescriptions</h5>
+                    <p class="card-text">Manage prescriptions, view medication history, and issue new prescriptions.</p>
+                    <a href="{% url 'prescriptions' %}" class="btn btn-info">Go to Prescriptions</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add more cards as needed for other services like Doctors, Pharmacy, Laboratory, etc. -->
+        <!-- Example Card 4: Doctors -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-md fa-3x mb-3 text-warning"></i>
+                    <h5 class="card-title">Doctors</h5>
+                    <p class="card-text">Manage doctor profiles, schedules, and specializations.</p>
+                    <a href="{% url 'doctor_dashboard' %}" class="btn btn-warning">Manage Doctors</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example Card 5: Pharmacy -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-prescription-bottle-alt fa-3x mb-3 text-danger"></i>
+                    <h5 class="card-title">Pharmacy</h5>
+                    <p class="card-text">Oversee pharmacy inventory, dispense medications, and manage stock.</p>
+                    <a href="{% url 'pharmacy' %}" class="btn btn-danger">Go to Pharmacy</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example Card 6: Laboratory -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-flask fa-3x mb-3" style="color: #6f42c1;"></i>
+                    <h5 class="card-title">Laboratory</h5>
+                    <p class="card-text">Manage lab tests, results, and technician assignments.</p>
+                    <a href="{% url 'laboratory' %}" class="btn btn-secondary" style="background-color: #6f42c1; border-color: #6f42c1;">Go to Laboratory</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example Card 7: Patient Management -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-user fa-3x mb-3" style="color: #28a745;"></i>
+                    <h5 class="card-title">Patient Management</h5>
+                    <p class="card-text">Manage patient records, appointments, and medical history.</p>
+                    <a href="{% url 'patient_management' %}" class="btn btn-success" style="background-color: #28a745; border-color: #28a745;">Go to Patient Management</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example Card 8: Inventory Management -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-box fa-3x mb-3" style="color: #17a2b8;"></i>
+                    <h5 class="card-title">Inventory Management</h5>
+                    <p class="card-text">Manage inventory levels, stock alerts, and supplier information.</p>
+                    <a href="{% url 'inventory' %}" class="btn btn-info" style="background-color: #17a2b8; border-color: #17a2b8;">Go to Inventory Management</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Example Card 9: Billing and Payments -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-money-bill-wave fa-3x mb-3" style="color: #ffc107;"></i>
+                    <h5 class="card-title">Billing and Payments</h5>
+                    <p class="card-text">Manage billing, payments, and insurance claims.</p>
+                    <a href="{% url 'payments' %}" class="btn btn-warning" style="background-color: #ffc107; border-color: #ffc107;">Go to Billing and Payments</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const welcomeMessageDiv = document.getElementById('welcomeMessage');
+    const h2 = welcomeMessageDiv.querySelector('h2');
+        if (h2) {
+            // If you can get the username, you can personalize it more.
+            // For example, if you decode JWT: const decoded = jwt_decode(authToken);
+            // h2.textContent = `Welcome, ${decoded.username}!`;
+            h2.textContent = 'Welcome back to the Healthcare Management System!';
+        }
+});
+</script>
+{% endblock %}
+
+

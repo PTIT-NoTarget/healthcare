@@ -1,0 +1,231 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}My Healthcare App{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <!--Bootstrap-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!--Font Awesome-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+
+    <style>
+        .profile-menu {
+            cursor: pointer;
+        }
+        .profile-menu img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        /* Chatbot styles */
+        .chat-icon {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: #0d6efd;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .chat-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-icon i {
+            color: white;
+            font-size: 24px;
+        }
+
+        .chat-window {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 999;
+        }
+
+        .chat-header {
+            padding: 15px;
+            background: #0d6efd;
+            color: white;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-body {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .chat-input {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        .chat-input button {
+            padding: 8px 15px;
+            border: none;
+            background: #0d6efd;
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            margin-left: auto;
+            background: #0d6efd;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 15px 15px 0 15px;
+        }
+
+        .bot-message {
+            background: #f1f1f1;
+            padding: 8px 15px;
+            border-radius: 15px 15px 15px 0;
+        }
+    </style>
+
+    <script>
+    (function() {
+        const authToken = localStorage.getItem('authToken');
+        const loginPageUrl = "{% url 'login' %}"; // Django will render the correct login URL
+        const registerPageUrl = "{% url 'register' %}"; // Uncomment if you have a registration page
+
+        const publicPaths = [loginPageUrl, registerPageUrl];
+
+        const currentPath = window.location.pathname;
+
+        if (!authToken && !publicPaths.includes(currentPath)) {
+            window.location.href = loginPageUrl;
+        }
+    })();
+    </script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Healthcare App</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+{#                    <li class="nav-item">#}
+{#                        <a class="nav-link active" aria-current="page" href="/">Home</a>#}
+{#                    </li>#}
+                </ul>
+                <ul class="navbar-nav" id="authNav">
+                    <li class="nav-item auth-buttons">
+                        <a class="nav-link" href="{% url 'register' %}">Register</a>
+                    </li>
+                    <li class="nav-item auth-buttons">
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                    </li>
+                    <li class="nav-item dropdown d-none" id="userProfileMenu">
+                        <a class="nav-link dropdown-toggle profile-menu" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <span id="username">User</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fas fa-user-cog"></i> Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% block content %}
+        <!-- Content will be injected here -->
+        {% endblock %}
+    </div>
+
+    <!-- Chatbot Icon -->
+    <div class="chat-icon" id="chatIcon">
+        <i class="fas fa-comments"></i>
+    </div>
+
+    <!-- Chat Window -->
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <span>Healthcare Assistant</span>
+            <i class="fas fa-times" id="closeChat" style="cursor: pointer;"></i>
+        </div>
+        <div class="chat-body" id="chatBody">
+            <!-- Messages will be added here -->
+            <div class="message bot-message">
+                Hello! How can I help you today?
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="chatInput" placeholder="Type your message..." />
+            <button id="sendMessage">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <footer class="bg-light text-center text-lg-start mt-auto">
+        <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">
+            © 2025 Healthcare App
+        </div>
+    </footer>
+
+
+    <!--Markdown-->
+    <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js" defer></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous" defer></script>
+    <!-- Auth JS -->
+    <script src="{% static 'js/auth.js' %}" defer></script>
+    <!-- Chatbot JS -->
+    <script src="{% static 'js/chatbot.js' %}" defer></script>
+    <!-- Custom JS -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

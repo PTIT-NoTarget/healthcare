@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Doctor Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        transition: transform 0.3s;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+    }
+    .appointment-item {
+        border-left: 4px solid #0d6efd;
+    }
+    .status-pending {
+        color: #ffc107;
+    }
+    .status-confirmed {
+        color: #198754;
+    }
+    .status-cancelled {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Welcome, Dr. <span id="doctorName">...</span></h2>
+            <p class="text-muted">Specialization: <span id="doctorSpecialization">...</span></p>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white dashboard-card">
+                <div class="card-body">
+                    <h5 class="card-title">Today's Appointments</h5>
+                    <h2 class="card-text" id="todayAppointments">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white dashboard-card">
+                <div class="card-body">
+                    <h5 class="card-title">Patients Treated</h5>
+                    <h2 class="card-text" id="treatedPatients">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white dashboard-card">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Reports</h5>
+                    <h2 class="card-text" id="pendingReports">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white dashboard-card">
+                <div class="card-body">
+                    <h5 class="card-title">Upcoming Appointments</h5>
+                    <h2 class="card-text" id="upcomingAppointments">0</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="row">
+        <!-- Left Column - Appointments -->
+        <div class="col-lg-8">
+            <!-- Today's Appointments -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Today's Appointments</h5>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#appointmentModal">
+                        <i class="fas fa-plus"></i> New Appointment
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="appointmentsList">
+                        <!-- Appointments will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient Records -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Patient Records</h5>
+                </div>
+                <div class="card-body">
+                    <div id="patientRecordsList">
+                        <!-- Patient records will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Quick Actions & Notifications -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#prescriptionModal">
+                            <i class="fas fa-prescription"></i> Write Prescription
+                        </button>
+                        <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#labRequestModal">
+                            <i class="fas fa-flask"></i> Request Lab Test
+                        </button>
+                        <button class="btn btn-outline-success" id="viewScheduleBtn">
+                            <i class="fas fa-calendar-alt"></i> View Schedule
+                        </button>
+                        <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#referralModal">
+                            <i class="fas fa-share"></i> Create Referral
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Notifications</h5>
+                </div>
+                <div class="card-body">
+                    <div id="notificationsList">
+                        <!-- Notifications will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<!-- New Appointment Modal -->
+<div class="modal fade" id="appointmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Schedule New Appointment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="appointmentForm">
+                    <div class="mb-3">
+                        <label class="form-label">Patient</label>
+                        <select class="form-select" id="patientSelect" required>
+                            <option value="">Select Patient</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-control" id="appointmentDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Time</label>
+                        <input type="time" class="form-control" id="appointmentTime" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" id="appointmentNotes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveAppointment">Save Appointment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Prescription Modal -->
+<div class="modal fade" id="prescriptionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Write Prescription</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="prescriptionForm">
+                    <div class="mb-3">
+                        <label class="form-label">Patient</label>
+                        <select class="form-select" id="prescriptionPatient" required>
+                            <option value="">Select Patient</option>
+                        </select>
+                    </div>
+                    <div id="medicationsList">
+                        <div class="medication-item mb-3">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Medication</label>
+                                    <select class="form-select medication-select" required>
+                                        <option value="">Select Medication</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Dosage</label>
+                                    <input type="text" class="form-control" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Frequency</label>
+                                    <input type="text" class="form-control" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Duration</label>
+                                    <input type="text" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="addMedication">
+                        <i class="fas fa-plus"></i> Add Medication
+                    </button>
+                    <div class="mb-3 mt-3">
+                        <label class="form-label">Instructions</label>
+                        <textarea class="form-control" id="prescriptionInstructions" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="savePrescription">Save Prescription</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lab Request Modal -->
+<div class="modal fade" id="labRequestModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Request Lab Test</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="labRequestForm">
+                    <div class="mb-3">
+                        <label class="form-label">Patient</label>
+                        <select class="form-select" id="labRequestPatient" required>
+                            <option value="">Select Patient</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Test Type</label>
+                        <select class="form-select" id="testType" required>
+                            <option value="">Select Test Type</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Priority</label>
+                        <select class="form-select" id="testPriority">
+                            <option value="normal">Normal</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" id="labRequestNotes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveLabRequest">Submit Request</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/doctor-dashboard.js' %}"></script>
+{% endblock %}

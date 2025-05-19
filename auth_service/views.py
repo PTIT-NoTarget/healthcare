@@ -4,7 +4,7 @@ from rest_framework.response import Response
 import requests  # Make sure requests is imported
 
 from .models import UserRole
-from .serializers import AdminCreateUserSerializer, PatientRegisterSerializer, UserSerializer
+from .serializers import AdminCreateUserSerializer, PatientRegisterSerializer, UserSerializer, ProfileUpdateSerializer
 
 User = get_user_model()
 
@@ -69,3 +69,21 @@ class UserDetailView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class ProfileUpdateView(generics.UpdateAPIView):
+    serializer_class = ProfileUpdateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(serializer.data)
+

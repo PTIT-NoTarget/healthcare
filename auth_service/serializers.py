@@ -117,3 +117,13 @@ class AdminCreateUserSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**cleaned_user_data)
         return user
 
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('email', 'first_name', 'last_name', 'phone_number')
+        extra_kwargs = {
+            'email': {'required': False},
+            'first_name': {'required': False},
+            'last_name': {'required': False},
+            'phone_number': {'required': False}
+        }

@@ -136,3 +136,106 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
         item.refresh_from_db()
         serializer = self.get_serializer(item)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def expired(self, request):
+        """Return inventory items that have expired."""
+        expired_items = InventoryItem.objects.filter(expiration_date__lt=timezone.now().date())
+        serializer = self.get_serializer(expired_items, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def restock(self, request, pk=None):
+        """Add stock to an inventory item."""
+        inventory_item = self.get_object()
+        quantity = request.data.get('quantity', 0)
+        if quantity <= 0:
+            return Response(
+                {'error': 'Quantity must be positive'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        inventory_item.quantity += quantity
+        inventory_item.last_restock_date = timezone.now()
+        inventory_item.save()
+
+        serializer = self.get_serializer(inventory_item)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def dispense(self, request, pk=None):
+        """Remove stock from an inventory item."""
+        inventory_item = self.get_object()
+        quantity = request.data.get('quantity', 0)
+        if quantity <= 0:
+            return Response(
+                {'error': 'Quantity must be positive'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if quantity > inventory_item.quantity:
+            return Response(
+                {'error': 'Insufficient stock'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        inventory_item.quantity -= quantity
+        if inventory_item.quantity <= inventory_item.reorder_level:
+            inventory_item.status = 'Low Stock'
+        if inventory_item.quantity == 0:
+            inventory_item.status = 'Out of Stock'
+        inventory_item.save()
+
+        serializer = self.get_serializer(inventory_item)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def transfer(self, request, pk=None):
+        """Transfer inventory item to another location."""
+        inventory_item = self.get_object()
+        new_location_id = request.data.get('location_id')
+        new_location_type = request.data.get('location_type')
+        quantity = request.data.get('quantity', 0)
+
+        if not all([new_location_id, new_location_type, quantity > 0]):
+            return Response(
+                {'error': 'Missing required parameters'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if quantity > inventory_item.quantity:
+            return Response(
+                {'error': 'Insufficient stock for transfer'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create new inventory item at destination if quantity is less than total
+        if quantity < inventory_item.quantity:
+            new_item = InventoryItem.objects.create(
+                item_id=inventory_item.item_id,
+                item_type=inventory_item.item_type,
+                item_name=inventory_item.item_name,
+                description=inventory_item.description,
+                manufacturer=inventory_item.manufacturer,
+                location_id=new_location_id,
+                location_type=new_location_type,
+                quantity=quantity,
+                unit_of_measure=inventory_item.unit_of_measure,
+                batch_number=inventory_item.batch_number,
+                expiration_date=inventory_item.expiration_date,
+                purchase_price=inventory_item.purchase_price,
+                selling_price=inventory_item.selling_price,
+                reorder_level=inventory_item.reorder_level,
+                supplier_id=inventory_item.supplier_id
+            )
+            inventory_item.quantity -= quantity
+            inventory_item.save()
+            serializer = self.get_serializer(new_item)
+        else:
+            # Update location if transferring all quantity
+            inventory_item.location_id = new_location_id
+            inventory_item.location_type = new_location_type
+            inventory_item.save()
+            serializer = self.get_serializer(inventory_item)
+
+        return Response(serializer.data)
+

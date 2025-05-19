@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "prescription_service",
     "medical_record_service",
     "laboratory_service",
+    "template_service",  # Added template_service
 ]
 
 REST_FRAMEWORK = {
@@ -97,7 +98,7 @@ ROOT_URLCONF = "healthcare.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, 'template_service/templates')],  # Added template directory
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -174,9 +175,54 @@ DATABASES = {
         'USER': 'healthcare',
         'PASSWORD': 'healthcare_password',
         'HOST': os.environ.get('DB_HOST_POSTGRES', 'localhost'),  # Use 'postgres' when running in Docker
-        'PORT': '5432',
+        'PORT': '5433',
         'OPTIONS': {
             'sslmode': 'disable',  # Disable SSL for local development
+        },
+    },
+    # Inventory database using MongoDB
+    'inventory_db': {
+        'ENGINE': 'djongo',
+        'NAME': 'healthcare_inventory',
+        'ENFORCE_SCHEMA': False,
+        'CLIENT': {
+            'host': f"mongodb://{os.environ.get('DB_HOST_MONGODB', 'localhost')}:27017",
+        }
+    },
+    # Insurance database using PostgreSQL
+    'insurance_db': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'healthcare_insurance',
+        'USER': 'healthcare',
+        'PASSWORD': 'healthcare_password',
+        'HOST': os.environ.get('DB_HOST_POSTGRES', 'localhost'),
+        'PORT': '5433',
+        'OPTIONS': {
+            'sslmode': 'disable',
+        },
+    },
+    # Payment database using PostgreSQL
+    'payment_db': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'healthcare_payment',
+        'USER': 'healthcare',
+        'PASSWORD': 'healthcare_password',
+        'HOST': os.environ.get('DB_HOST_POSTGRES', 'localhost'),
+        'PORT': '5433',
+        'OPTIONS': {
+            'sslmode': 'disable',
+        },
+    },
+    # Appointment database using PostgreSQL
+    'appointment_db': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'healthcare_appointment',
+        'USER': 'healthcare',
+        'PASSWORD': 'healthcare_password',
+        'HOST': os.environ.get('DB_HOST_POSTGRES', 'localhost'),
+        'PORT': '5433',
+        'OPTIONS': {
+            'sslmode': 'disable',
         },
     }
 }
@@ -216,7 +262,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "template_service/static"),
+]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Laboratory - Healthcare App{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Laboratory Management</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newTestModal">
+            <i class="fas fa-plus"></i> New Test Request
+        </button>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search tests...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="statusFilter">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="testTypeFilter">
+                        <option value="all">All Test Types</option>
+                        <option value="blood">Blood Test</option>
+                        <option value="urine">Urine Test</option>
+                        <option value="imaging">Imaging</option>
+                        <!-- More test types -->
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Total Tests</h6>
+                    <h3 class="card-text" id="totalTests">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Pending Tests</h6>
+                    <h3 class="card-text" id="pendingTests">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6 class="card-title">In Progress</h6>
+                    <h3 class="card-text" id="inProgressTests">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Completed Today</h6>
+                    <h3 class="card-text" id="completedToday">0</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Requests Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="testTable">
+                    <thead>
+                        <tr>
+                            <th>Test ID</th>
+                            <th>Patient</th>
+                            <th>Test Type</th>
+                            <th>Doctor</th>
+                            <th>Date Requested</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Test items will be loaded here dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Test Modal -->
+<div class="modal fade" id="newTestModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Test Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="testForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Patient</label>
+                            <select class="form-select" id="patientSelect" required>
+                                <option value="">Select Patient</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Test Type</label>
+                            <select class="form-select" id="testType" required>
+                                <option value="">Select Test Type</option>
+                                <option value="blood">Blood Test</option>
+                                <option value="urine">Urine Test</option>
+                                <option value="imaging">Imaging</option>
+                                <!-- More test types -->
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Requesting Doctor</label>
+                            <select class="form-select" id="doctorSelect" required>
+                                <option value="">Select Doctor</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Priority</label>
+                            <select class="form-select" id="priority" required>
+                                <option value="normal">Normal</option>
+                                <option value="urgent">Urgent</option>
+                                <option value="emergency">Emergency</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notes/Instructions</label>
+                            <textarea class="form-control" id="testNotes" rows="3"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveTest">Submit Request</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test Results Modal -->
+<div class="modal fade" id="testResultsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Test Results</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="resultsForm">
+                    <input type="hidden" id="testId">
+                    <div class="mb-3">
+                        <label class="form-label">Test Status</label>
+                        <select class="form-select" id="testStatus" required>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Results</label>
+                        <textarea class="form-control" id="testResults" rows="5" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Technician Notes</label>
+                        <textarea class="form-control" id="technicianNotes" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date Completed</label>
+                        <input type="datetime-local" class="form-control" id="completionDate">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="saveResults">Save Results</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/laboratory.js' %}"></script>
+{% endblock %}

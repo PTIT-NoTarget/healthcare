@@ -1,7 +1,7 @@
 import os
 import time
 import subprocess
-from mysql.connector import connect as mysql_connect
+# from mysql.connector import connect as mysql_connect
 import psycopg2
 
 print("=== Initializing Healthcare Databases ===")
@@ -17,12 +17,21 @@ try:
     conn = psycopg2.connect(
         host="localhost",
         port=5433,
-        user="postgres", 
+        user="healthcare",
         password="healthcare_password",
         database="postgres"
     )
     conn.autocommit = True  # Important for creating databases
     cursor = conn.cursor()
+    
+    # Databases to create
+    databases_to_create = [
+        'healthcare_pharmacy',
+        'healthcare_insurance',
+        'healthcare_laboratory',
+        'healthcare_payment',
+        'healthcare_appointment' # Added based on settings.py
+    ]
     
     # Check if user already exists
     cursor.execute("SELECT 1 FROM pg_roles WHERE rolname='healthcare'")
@@ -34,17 +43,16 @@ try:
     else:
         print("PostgreSQL user 'healthcare' already exists.")
     
-    # Check if database exists
-    cursor.execute("SELECT 1 FROM pg_database WHERE datname='healthcare_pharmacy'")
-    db_exists = cursor.fetchone()
-    
-    if not db_exists:
-        print("Creating PostgreSQL database 'healthcare_pharmacy'...")
-        cursor.execute("CREATE DATABASE healthcare_pharmacy")
-        cursor.execute("GRANT ALL PRIVILEGES ON DATABASE healthcare_pharmacy TO healthcare")
-    else:
-        print("PostgreSQL database 'healthcare_pharmacy' already exists.")
-    
+    for db_name in databases_to_create:
+        cursor.execute(f"SELECT 1 FROM pg_database WHERE datname='{db_name}'")
+        db_exists = cursor.fetchone()
+        
+        if not db_exists:
+            print(f"Creating PostgreSQL database '{db_name}'...")
+            cursor.execute(f"CREATE DATABASE {db_name}")
+            cursor.execute(f"GRANT ALL PRIVILEGES ON DATABASE {db_name} TO healthcare")
+        else:
+            print(f"PostgreSQL database '{db_name}' already exists.")
     print("✅ PostgreSQL initialization complete.")
     cursor.close()
     conn.close()

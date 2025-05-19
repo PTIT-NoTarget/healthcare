@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Payments - Healthcare App{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/payments.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>
+                <i class="fas fa-credit-card me-2"></i>
+                Payments
+            </h2>
+        </div>
+    </div>
+
+    <!-- Payment Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6>Pending Payments</h6>
+                    <h3 id="pendingCount">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6>Total Amount Due</h6>
+                    <h3 id="totalAmount">$0.00</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Payments Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">Pending Payments</h5>
+        </div>
+        <div class="card-body">
+            <div id="pendingPayments">
+                <!-- Pending payments will be loaded here dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment History Section -->
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Payment History</h5>
+        </div>
+        <div class="card-body">
+            <div id="paymentHistory">
+                <!-- Payment history will be loaded here dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Complete Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="summary-section mb-4">
+                    <h6>Payment Summary</h6>
+                    <div class="summary-item">
+                        <span>Amount:</span>
+                        <span id="paymentAmount" class="total-amount">$0.00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Description:</span>
+                        <span id="paymentDescription">-</span>
+                    </div>
+                </div>
+
+                <form id="paymentMethodForm">
+                    <input type="hidden" id="currentPaymentId">
+                    <h6 class="mb-3">Select Payment Method</h6>
+
+                    <div class="row">
+                        <!-- Credit Card -->
+                        <div class="col-md-6 mb-3">
+                            <div class="payment-method-card">
+                                <input type="radio" name="paymentMethod" value="credit_card" class="d-none" id="creditCard">
+                                <label for="creditCard" class="d-flex align-items-center">
+                                    <img src="{% static 'images/credit-card.png' %}" alt="Credit Card" class="me-2">
+                                    <div>
+                                        <h6 class="mb-0">Credit Card</h6>
+                                        <small class="text-muted">Visa, MasterCard, etc.</small>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Bank Transfer -->
+                        <div class="col-md-6 mb-3">
+                            <div class="payment-method-card">
+                                <input type="radio" name="paymentMethod" value="bank_transfer" class="d-none" id="bankTransfer">
+                                <label for="bankTransfer" class="d-flex align-items-center">
+                                    <img src="{% static 'images/bank-transfer.png' %}" alt="Bank Transfer" class="me-2">
+                                    <div>
+                                        <h6 class="mb-0">Bank Transfer</h6>
+                                        <small class="text-muted">Direct bank transfer</small>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Insurance -->
+                        <div class="col-md-6 mb-3">
+                            <div class="payment-method-card">
+                                <input type="radio" name="paymentMethod" value="insurance" class="d-none" id="insurance">
+                                <label for="insurance" class="d-flex align-items-center">
+                                    <img src="{% static 'images/insurance.png' %}" alt="Insurance" class="me-2">
+                                    <div>
+                                        <h6 class="mb-0">Insurance</h6>
+                                        <small class="text-muted">Pay through insurance</small>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Cash -->
+                        <div class="col-md-6 mb-3">
+                            <div class="payment-method-card">
+                                <input type="radio" name="paymentMethod" value="cash" class="d-none" id="cash">
+                                <label for="cash" class="d-flex align-items-center">
+                                    <img src="{% static 'images/cash.png' %}" alt="Cash" class="me-2">
+                                    <div>
+                                        <h6 class="mb-0">Cash</h6>
+                                        <small class="text-muted">Pay at counter</small>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary w-100">Complete Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Receipt Modal -->
+<div class="modal fade receipt-modal" id="receiptModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Payment Receipt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="receiptContent">
+                <!-- Receipt content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="printReceipt()">Print Receipt</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/payments.js' %}"></script>
+{% endblock %}
