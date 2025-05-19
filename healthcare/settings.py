@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "pharmacy_service",
     "prescription_service",
     "medical_record_service",
+    "laboratory_service",
 ]
 
 REST_FRAMEWORK = {
@@ -162,6 +163,18 @@ DATABASES = {
         'CLIENT': {
             'host': f"mongodb://{os.environ.get('DB_HOST_MONGODB', 'localhost')}:27017",  # Use 'mongodb' when running in Docker
         }
+    },
+    # Laboratory database using PostgreSQL
+    'laboratory_db': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'healthcare_laboratory',
+        'USER': 'healthcare',
+        'PASSWORD': 'healthcare_password',
+        'HOST': os.environ.get('DB_HOST_POSTGRES', 'localhost'),  # Use 'postgres' when running in Docker
+        'PORT': '5432',
+        'OPTIONS': {
+            'sslmode': 'disable',  # Disable SSL for local development
+        },
     }
 }
 
