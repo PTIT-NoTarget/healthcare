@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "medicine_service",
     "pharmacy_service",
     "prescription_service",
+    "medical_record_service",
 ]
 
 REST_FRAMEWORK = {
@@ -148,6 +149,15 @@ DATABASES = {
     'prescription_db': {
         'ENGINE': 'djongo',
         'NAME': 'healthcare_prescriptions',
+        'ENFORCE_SCHEMA': False,
+        'CLIENT': {
+            'host': f"mongodb://{os.environ.get('DB_HOST_MONGODB', 'localhost')}:27017",  # Use 'mongodb' when running in Docker
+        }
+    },
+    # Medical Record database using MongoDB
+    'medical_record_db': {
+        'ENGINE': 'djongo',
+        'NAME': 'healthcare_medical_records',
         'ENFORCE_SCHEMA': False,
         'CLIENT': {
             'host': f"mongodb://{os.environ.get('DB_HOST_MONGODB', 'localhost')}:27017",  # Use 'mongodb' when running in Docker
