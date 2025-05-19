@@ -28,4 +28,10 @@ urlpatterns = [
     path("api/doctors/", include("doctor_service.urls")),
     # Nurse Service
     path("api/nurses/", include("nurse_service.urls")),
+    # Medicine Service
+    path("api/medicines/", include("medicine_service.urls")),
+    # Pharmacy Service
+    path("api/pharmacies/", include("pharmacy_service.urls")),
+    # Prescription Service
+    path("api/prescriptions/", include("prescription_service.urls")),
 ]

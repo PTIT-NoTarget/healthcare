@@ -11,6 +11,8 @@ class DatabaseRouter:
             return 'medicine_db'
         elif model._meta.app_label == 'pharmacy_service':
             return 'pharmacy_db'
+        elif model._meta.app_label == 'prescription_service':
+            return 'prescription_db'
         return 'default'
 
     def db_for_write(self, model, **hints):
@@ -22,6 +24,8 @@ class DatabaseRouter:
             return 'medicine_db'
         elif model._meta.app_label == 'pharmacy_service':
             return 'pharmacy_db'
+        elif model._meta.app_label == 'prescription_service':
+            return 'prescription_db'
         return 'default'
 
     def allow_relation(self, obj1, obj2, **hints):
@@ -46,4 +50,6 @@ class DatabaseRouter:
             return db == 'medicine_db'
         elif app_label == 'pharmacy_service':
             return db == 'pharmacy_db'
+        elif app_label == 'prescription_service':
+            return db == 'prescription_db'
         return db == 'default' 

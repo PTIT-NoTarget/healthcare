@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "django_filters",
 
     # All Services
     "auth_service",
@@ -49,11 +50,15 @@ INSTALLED_APPS = [
     "laboratory_technician_service",
     "medicine_service",
     "pharmacy_service",
+    "prescription_service",
 ]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
     ),
 }
 
@@ -134,6 +139,15 @@ DATABASES = {
     'medicine_db': {
         'ENGINE': 'djongo',
         'NAME': 'healthcare_medicines',
+        'ENFORCE_SCHEMA': False,
+        'CLIENT': {
+            'host': f"mongodb://{os.environ.get('DB_HOST_MONGODB', 'localhost')}:27017",  # Use 'mongodb' when running in Docker
+        }
+    },
+    # Prescription database using MongoDB
+    'prescription_db': {
+        'ENGINE': 'djongo',
+        'NAME': 'healthcare_prescriptions',
         'ENFORCE_SCHEMA': False,
         'CLIENT': {
             'host': f"mongodb://{os.environ.get('DB_HOST_MONGODB', 'localhost')}:27017",  # Use 'mongodb' when running in Docker
