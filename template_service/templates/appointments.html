@@ -4,116 +4,142 @@
 {% block title %}Appointments - Healthcare App{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Appointments</h2>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newAppointmentModal">
-            <i class="fas fa-plus"></i> New Appointment
-        </button>
-    </div>
-
-    <!-- Appointment Filters -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-3">
-                    <label class="form-label">Date Range</label>
-                    <select class="form-select" id="dateFilter">
-                        <option value="today">Today</option>
-                        <option value="week">This Week</option>
-                        <option value="month">This Month</option>
-                        <option value="all">All</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Status</label>
-                    <select class="form-select" id="statusFilter">
-                        <option value="all">All Status</option>
-                        <option value="scheduled">Scheduled</option>
-                        <option value="completed">Completed</option>
-                        <option value="canceled">Canceled</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Doctor</label>
-                    <select class="form-select" id="doctorFilter">
-                        <option value="all">All Doctors</option>
-                        <!-- Will be populated dynamically -->
-                    </select>
-                </div>
-            </div>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Appointments</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newAppointmentModal">
+                <i class="fas fa-plus"></i> New Appointment
+            </button>
         </div>
-    </div>
 
-    <!-- Appointments List -->
-    <div class="row" id="appointmentsList">
-        <!-- Appointments will be loaded here dynamically -->
-{#        <div class="col-md-6 mb-3">#}
-{#            <div class="card">#}
-{#                <div class="card-body">#}
-{#                    <div class="d-flex justify-content-between align-items-center mb-2">#}
-{#                        <h5 class="card-title">Dr. John Smith</h5>#}
-{#                        <span class="badge bg-primary">Scheduled</span>#}
-{#                    </div>#}
-{#                    <p class="card-text">#}
-{#                        <i class="fas fa-calendar"></i> May 20, 2025 10:00 AM<br>#}
-{#                        <i class="fas fa-user"></i> Patient: Jane Doe<br>#}
-{#                        <i class="fas fa-notes-medical"></i> Reason: General Checkup#}
-{#                    </p>#}
-{#                    <div class="d-flex justify-content-end gap-2">#}
-{#                        <button class="btn btn-sm btn-outline-primary">#}
-{#                            <i class="fas fa-edit"></i> Edit#}
-{#                        </button>#}
-{#                        <button class="btn btn-sm btn-outline-danger">#}
-{#                            <i class="fas fa-times"></i> Cancel#}
-{#                        </button>#}
-{#                    </div>#}
-{#                </div>#}
-{#            </div>#}
-{#        </div>#}
-    </div>
-</div>
-
-<!-- New Appointment Modal -->
-<div class="modal fade" id="newAppointmentModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Schedule New Appointment</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="appointmentForm">
-                    <div class="mb-3">
+        <!-- Appointment Filters -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="form-label">Date Range</label>
+                        <select class="form-select" id="dateFilter">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="statusFilter">
+                            <option value="all">All Status</option>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="completed">Completed</option>
+                            <option value="canceled">Canceled</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
                         <label class="form-label">Doctor</label>
-                        <select class="form-select" id="doctorSelect" required>
+                        <select class="form-select" id="doctorFilter">
+                            <option value="all">All Doctors</option>
                             <!-- Will be populated dynamically -->
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Date</label>
-                        <input type="date" class="form-control" id="appointmentDate" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Time</label>
-                        <input type="time" class="form-control" id="appointmentTime" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Reason for Visit</label>
-                        <textarea class="form-control" id="appointmentReason" rows="3" required></textarea>
-                    </div>
-                </form>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveAppointment">Schedule Appointment</button>
+        </div>
+
+        <!-- Appointments List -->
+        <div class="row" id="appointmentsList">
+            <!-- Appointments will be loaded here dynamically -->
+            {#        <div class="col-md-6 mb-3">#}
+            {#            <div class="card">#}
+            {#                <div class="card-body">#}
+            {#                    <div class="d-flex justify-content-between align-items-center mb-2">#}
+            {#                        <h5 class="card-title">Dr. John Smith</h5>#}
+            {#                        <span class="badge bg-primary">Scheduled</span>#}
+            {#                    </div>#}
+            {#                    <p class="card-text">#}
+            {#                        <i class="fas fa-calendar"></i> May 20, 2025 10:00 AM<br>#}
+            {#                        <i class="fas fa-user"></i> Patient: Jane Doe<br>#}
+            {#                        <i class="fas fa-notes-medical"></i> Reason: General Checkup#}
+            {#                    </p>#}
+            {#                    <div class="d-flex justify-content-end gap-2">#}
+            {#                        <button class="btn btn-sm btn-outline-primary">#}
+            {#                            <i class="fas fa-edit"></i> Edit#}
+            {#                        </button>#}
+            {#                        <button class="btn btn-sm btn-outline-danger">#}
+            {#                            <i class="fas fa-times"></i> Cancel#}
+            {#                        </button>#}
+            {#                    </div>#}
+            {#                </div>#}
+            {#            </div>#}
+            {#        </div>#}
+        </div>
+    </div>
+
+    <!-- New Appointment Modal -->
+    <div class="modal fade" id="newAppointmentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Schedule New Appointment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="appointmentForm" class="needs-validation" novalidate>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Patient <span class="text-danger">*</span></label>
+                                <select class="form-select" id="patientSelect" required>
+                                    <option value="">Select Patient</option>
+                                    <!-- Will be populated dynamically -->
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Doctor <span class="text-danger">*</span></label>
+                                <select class="form-select" id="doctorSelect" required>
+                                    <option value="">Select Doctor</option>
+                                    <!-- Will be populated dynamically -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="appointmentDate" required
+                                       min="{{ today|date:'Y-m-d' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Time <span class="text-danger">*</span></label>
+                                <select class="form-select" id="appointmentTime" required>
+                                    <option value="">Select a date and doctor first</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Reason for Visit <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="appointmentReason" rows="3" required
+                                      placeholder="Please provide details about the reason for this appointment"></textarea>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <small>
+                                Please note that appointments can only be scheduled during the doctor's available hours.
+                                The time slots shown are based on the selected doctor's schedule.
+                            </small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveAppointment">
+                        <i class="fas fa-calendar-check"></i> Schedule Appointment
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/appointments.js' %}"></script>
+    <script src="{% static 'js/appointments.js' %}"></script>
 {% endblock %}
+
 

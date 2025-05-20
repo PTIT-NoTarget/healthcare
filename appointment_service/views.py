@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q
-from rest_framework import viewsets, permissions, status, filters
+from rest_framework import viewsets, permissions, status, filters, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -550,3 +550,40 @@ class RecurringPatternViewSet(viewsets.ModelViewSet):
             )
         else:
             serializer.save(pattern_id=pattern_id)
+
+
+class TimeslotAvailabilityView(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        provider_id = request.query_params.get('provider_id')
+        provider_type = request.query_params.get('provider_type')
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        try:
+            # Parse dates
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+
+            # Fetch provider's schedule and appointments
+            # Calculate available slots
+            available_slots = self.calculate_available_slots(
+                provider_id,
+                provider_type,
+                start_date,
+                end_date
+            )
+
+            return Response(available_slots)
+
+        except ValueError:
+            return Response(
+                {"error": "Invalid date format"},
+                status=400
+            )
+
+    def calculate_available_slots(self, provider_id, provider_type, start_date, end_date):
+        # Implementation of slot calculation logic
+        # This is a placeholder - implement your business logic here
+        return []
