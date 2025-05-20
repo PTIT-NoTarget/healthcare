@@ -57,7 +57,8 @@ INSTALLED_APPS = [
     "medical_record_service",
     "laboratory_service",
     "template_service",
-    "appointment_service"
+    "appointment_service",
+    "chatbot_service"
 ]
 
 REST_FRAMEWORK = {

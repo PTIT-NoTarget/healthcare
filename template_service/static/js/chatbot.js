@@ -27,10 +27,8 @@ document.addEventListener('DOMContentLoaded', function() {
             addMessage(message, 'user-message');
             chatInput.value = '';
 
-            // Simulate bot response (you can replace this with actual API call)
-            setTimeout(() => {
-                getBasicResponse(message);
-            }, 500);
+            // Get bot response from API
+            getBotResponse(message);
         }
     }
 
@@ -45,6 +43,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Get bot response
     async function getBotResponse(message) {
+        // Show typing indicator
+        const typingDiv = document.createElement('div');
+        typingDiv.classList.add('message', 'bot-message', 'typing-indicator');
+        typingDiv.textContent = 'Typing...';
+        chatBody.appendChild(typingDiv);
+        chatBody.scrollTop = chatBody.scrollHeight;
+
         try {
             const response = await fetch('/api/chatbot/', {
                 method: 'POST',
@@ -55,13 +60,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ message })
             });
 
+            // Remove typing indicator
+            chatBody.removeChild(typingDiv);
+
             if (response.ok) {
                 const data = await response.json();
                 addMessage(data.response, 'bot-message');
             } else {
-                addMessage("Sorry, I'm having trouble understanding. Please try again.", 'bot-message');
+                // Handle error responses
+                if (response.status === 401) {
+                    addMessage("Please log in to use the chatbot.", 'bot-message');
+                } else {
+                    addMessage("Sorry, I'm having trouble understanding. Please try again.", 'bot-message');
+                }
             }
         } catch (error) {
+            // Remove typing indicator
+            if (typingDiv.parentNode) {
+                chatBody.removeChild(typingDiv);
+            }
+            
             console.error('Error:', error);
             addMessage("Sorry, I'm having trouble connecting. Please try again later.", 'bot-message');
         }
@@ -76,25 +94,4 @@ document.addEventListener('DOMContentLoaded', function() {
             sendMessageToBot();
         }
     });
-
-    // Basic responses for demo (remove this when implementing actual API)
-    const basicResponses = {
-        'hello': 'Hi! How can I help you today?',
-        'hi': 'Hello! How can I assist you?',
-        'how are you': "I'm doing well, thanks for asking! How can I help you?",
-        'bye': 'Goodbye! Have a great day!',
-        'appointment': 'Would you like to schedule an appointment with a doctor? I can help you with that.',
-        'help': 'I can help you with appointments, medical information, and general questions. What would you like to know?'
-    };
-
-    // Temporary function to handle responses without API
-    function getBasicResponse(message) {
-        message = message.toLowerCase();
-        for (const [key, response] of Object.entries(basicResponses)) {
-            if (message.includes(key)) {
-                return response;
-            }
-        }
-        return "I'm here to help! You can ask me about appointments, medical services, or general information.";
-    }
 });
