@@ -2,8 +2,8 @@
 
 # Start the containers
 echo "Starting Docker containers..."
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
 
 # Wait for databases to be ready
 echo "Waiting for databases to be ready..."
