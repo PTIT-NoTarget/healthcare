@@ -4,8 +4,9 @@ from auth_service.models import User # Assuming User model is in auth_service
 from django.utils import timezone # Added for default value
 
 class InsuranceProvider(models.Model):
-    # User field can represent an admin account associated with the insurance company for system access
-    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='insurance_provider_liaison_profile')
+    # Replace direct User relationship with user_id field
+    user_id = models.IntegerField(unique=True, null=True, blank=True, 
+                                  help_text=_("ID of the user account for this insurance provider liaison"))
     company_name = models.CharField(max_length=255, unique=True)
     # Official ID number of the insurance provider company (e.g., NAIC number or other regulatory ID)
     provider_id_number = models.CharField(max_length=50, unique=True, help_text=_("Official ID of the insurance company"))

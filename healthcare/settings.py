@@ -137,7 +137,7 @@ DATABASES = {
         'USER': 'healthcare',
         'PASSWORD': 'healthcare_password',
         'HOST': os.environ.get('DB_HOST_POSTGRES', 'localhost'),  # Use 'postgres' when running in Docker
-        'PORT': '5433',
+        'PORT': '5432',
         'OPTIONS': {
             'sslmode': 'disable',  # Disable SSL for local development
         },
@@ -176,7 +176,7 @@ DATABASES = {
         'USER': 'healthcare',
         'PASSWORD': 'healthcare_password',
         'HOST': os.environ.get('DB_HOST_POSTGRES', 'localhost'),  # Use 'postgres' when running in Docker
-        'PORT': '5433',
+        'PORT': '5432',
         'OPTIONS': {
             'sslmode': 'disable',  # Disable SSL for local development
         },
@@ -197,7 +197,7 @@ DATABASES = {
         'USER': 'healthcare',
         'PASSWORD': 'healthcare_password',
         'HOST': os.environ.get('DB_HOST_POSTGRES', 'localhost'),
-        'PORT': '5433',
+        'PORT': '5432',
         'OPTIONS': {
             'sslmode': 'disable',
         },
@@ -209,7 +209,7 @@ DATABASES = {
         'USER': 'healthcare',
         'PASSWORD': 'healthcare_password',
         'HOST': os.environ.get('DB_HOST_POSTGRES', 'localhost'),
-        'PORT': '5433',
+        'PORT': '5432',
         'OPTIONS': {
             'sslmode': 'disable',
         },
@@ -221,7 +221,7 @@ DATABASES = {
         'USER': 'healthcare',
         'PASSWORD': 'healthcare_password',
         'HOST': os.environ.get('DB_HOST_POSTGRES', 'localhost'),
-        'PORT': '5433',
+        'PORT': '5432',
         'OPTIONS': {
             'sslmode': 'disable',
         },

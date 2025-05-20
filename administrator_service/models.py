@@ -1,12 +1,13 @@
 from django.db import models
-from auth_service.models import User
 
 
 class Administrator(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='administrator')
+    user_id = models.IntegerField(unique=True)
     employee_id = models.CharField(max_length=20, unique=True)
     department = models.CharField(max_length=100)
     access_level = models.IntegerField(default=1)  # Higher numbers mean more access
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.user.username} - Admin ({self.employee_id})" 
+        return f"Admin {self.employee_id} (User ID: {self.user_id})" 

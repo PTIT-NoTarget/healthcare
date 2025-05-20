@@ -15,6 +15,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./init-mysql.sql:/docker-entrypoint-initdb.d/init-mysql.sql
     networks:
       - healthcare_network
     healthcheck:
@@ -23,19 +24,20 @@ services:
       timeout: 5s
       retries: 5
 
-  # PostgreSQL for Pharmacy Service
+  # PostgreSQL for all PostgreSQL services
   postgres:
     image: postgres:14
     container_name: healthcare_postgres
     restart: always
     environment:
-      POSTGRES_DB: healthcare_pharmacy
       POSTGRES_USER: healthcare
       POSTGRES_PASSWORD: healthcare_password
+      POSTGRES_DB: healthcare_pharmacy
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-postgres.sql:/docker-entrypoint-initdb.d/init-postgres.sql
     networks:
       - healthcare_network
     healthcheck:
@@ -44,7 +46,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # MongoDB for Medicine Service (no authentication for development)
+  # MongoDB for all MongoDB services
   mongodb:
     image: mongo:6
     container_name: healthcare_mongodb
@@ -53,7 +55,7 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./init-mongodb.js:/docker-entrypoint-initdb.d/init-mongodb.js
     networks:
       - healthcare_network
     healthcheck:

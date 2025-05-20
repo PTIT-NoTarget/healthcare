@@ -1,11 +1,18 @@
 from rest_framework import serializers
 from .models import Administrator
-from auth_service.serializers import UserSerializer
 
 
 class AdministratorSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    # Add read-only fields for user data that will be populated from auth service
+    username = serializers.CharField(read_only=True, required=False)
+    email = serializers.EmailField(read_only=True, required=False)
+    first_name = serializers.CharField(read_only=True, required=False)
+    last_name = serializers.CharField(read_only=True, required=False)
     
     class Meta:
         model = Administrator
-        fields = ['id', 'user', 'employee_id', 'department', 'access_level'] 
+        fields = [
+            'id', 'user_id', 'username', 'email', 'first_name', 'last_name',
+            'employee_id', 'department', 'access_level', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at'] 

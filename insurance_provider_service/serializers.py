@@ -1,15 +1,22 @@
 from rest_framework import serializers
 from .models import InsuranceProvider
-from auth_service.serializers import UserSerializer # Assuming UserSerializer is available
 
 class InsuranceProviderSerializer(serializers.ModelSerializer):
-    # user = UserSerializer(read_only=True) # Only include if user liaison profile is relevant for API output
+    # Add fields for user data
+    username = serializers.CharField(read_only=True, required=False)
+    email = serializers.EmailField(read_only=True, required=False)
+    first_name = serializers.CharField(read_only=True, required=False)
+    last_name = serializers.CharField(read_only=True, required=False)
 
     class Meta:
         model = InsuranceProvider
         fields = [
             'id',
-            # 'user',
+            'user_id',
+            'username',
+            'email',
+            'first_name',
+            'last_name',
             'company_name',
             'provider_id_number',
             'contact_email',

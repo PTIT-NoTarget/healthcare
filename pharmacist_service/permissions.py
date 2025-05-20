@@ -6,4 +6,15 @@ class IsPharmacist(permissions.BasePermission):
     Custom permission to only allow pharmacists access.
     """
     def has_permission(self, request, view):
-        return request.user and hasattr(request.user, 'pharmacist') 
+        if not request.user or not request.user.is_authenticated:
+            return False
+        
+        # Get user_id from request.user
+        user_id = request.user.id
+        
+        # Check if user is a pharmacist
+        try:
+            from .models import Pharmacist
+            return Pharmacist.objects.filter(user_id=user_id).exists()
+        except:
+            return False 
