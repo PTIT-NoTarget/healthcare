@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from datetime import datetime, timedelta
+from django.contrib.auth.hashers import make_password
 from auth_service.models import User, UserRole, FullName, Address
 from patient_service.models import Patient
 from doctor_service.models import Doctor
@@ -71,6 +72,7 @@ class Command(BaseCommand):
             user = User.objects.create(
                 username=username,
                 email=f'{username}@example.com',
+                password=make_password('password123'),
                 role=role,
                 phone_number=f'+1555{str(hash(username))[-4:]}',
             )
@@ -449,3 +451,4 @@ class Command(BaseCommand):
             )
             claims.append(claim)
         return claims
+

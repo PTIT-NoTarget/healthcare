@@ -2,7 +2,7 @@
 
 # Start the containers
 echo "Starting Docker containers..."
-docker compose down
+docker compose down -v
 docker compose up -d
 
 # Wait for databases to be ready
@@ -47,5 +47,7 @@ docker exec healthcare_mongodb mongosh healthcare_medicines --quiet --eval "db.g
 docker exec healthcare_mongodb mongosh healthcare_prescriptions --quiet --eval "db.getCollectionNames()"
 docker exec healthcare_mongodb mongosh healthcare_medical_records --quiet --eval "db.getCollectionNames()"
 docker exec healthcare_mongodb mongosh healthcare_inventory --quiet --eval "db.getCollectionNames()"
+
+python manage.py create_sample_data
 
 echo "Setup complete!" 

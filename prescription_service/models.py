@@ -35,9 +35,9 @@ class MedicationItem(models.Model):
     frequency = models.CharField(max_length=100)  # e.g., "3 times a day"
     duration = models.CharField(max_length=100)  # e.g., "7 days"
     instructions = models.TextField()
-    
+
     class Meta:
-        abstract = True
+        pass
 
 
 class MedicationItemForm(forms.ModelForm):
