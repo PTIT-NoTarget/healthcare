@@ -22,6 +22,8 @@ class MedicineViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             permission_classes = [permissions.IsAdminUser]
+        elif self.action in ['list', 'retrieve', 'prescription_required', 'controlled_substances', 'over_the_counter']:
+            permission_classes = [permissions.AllowAny]
         else:
             permission_classes = [permissions.IsAuthenticated]
         return [permission() for permission in permission_classes]

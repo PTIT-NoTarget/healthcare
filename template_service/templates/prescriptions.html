@@ -57,33 +57,36 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="prescriptionForm">
+                <form id="prescriptionForm" class="needs-validation" novalidate>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Patient</label>
+                            <label class="form-label">Patient <span class="text-danger">*</span></label>
                             <select class="form-select" id="patientSelect" required>
                                 <option value="">Select Patient</option>
+                                <!-- Will be populated dynamically -->
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Doctor</label>
+                            <label class="form-label">Doctor <span class="text-danger">*</span></label>
                             <select class="form-select" id="doctorSelect" required>
                                 <option value="">Select Doctor</option>
+                                <!-- Will be populated dynamically -->
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Diagnosis</label>
+                            <label class="form-label">Diagnosis <span class="text-danger">*</span></label>
                             <textarea class="form-control" id="diagnosis" rows="2" required></textarea>
                         </div>
 
                         <div class="col-12">
-                            <h6>Medications</h6>
+                            <h6>Medications <span class="text-danger">*</span></h6>
                             <div id="medicationsList">
                                 <div class="medication-item mb-3">
                                     <div class="row g-2">
                                         <div class="col-md-4">
-                                            <select class="form-select medication-select" required>
+                                            <select class="form-select" id="medicationSelect" required>
                                                 <option value="">Select Medication</option>
+                                                <!-- Will be populated dynamically -->
                                             </select>
                                         </div>
                                         <div class="col-md-2">
@@ -109,15 +112,24 @@
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label">Instructions</label>
-                            <textarea class="form-control" id="instructions" rows="3" required></textarea>
+                            <label class="form-label">Instructions <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="instructions" rows="3" required 
+                                      placeholder="Enter detailed instructions for the patient"></textarea>
                         </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        <small>
+                            Please ensure all medication details are accurate. This prescription will be stored in the patient's medical record.
+                        </small>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="savePrescription">Create Prescription</button>
+                <button type="button" class="btn btn-primary" id="savePrescription">
+                    <i class="fas fa-save"></i> Create Prescription
+                </button>
             </div>
         </div>
     </div>

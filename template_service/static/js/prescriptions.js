@@ -1,3 +1,34 @@
+// Constants
+const API_BASE_URL = '/api';
+
+// Utility functions
+const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString();
+};
+
+// Helper function for status badge color
+function getStatusBadgeClass(status) {
+    const statusClasses = {
+        'active': 'success',
+        'completed': 'info',
+        'canceled': 'danger'
+    };
+    return statusClasses[status.toLowerCase()] || 'secondary';
+}
+
+// Helper function to debounce search input
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize variables
     const searchInput = document.getElementById('searchInput');
@@ -24,75 +55,67 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to load doctors
     async function loadDoctors() {
         try {
-            const response = await fetch('/api/doctors/', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
-            });
+            const response = await fetch(`${API_BASE_URL}/doctors/`);
             const doctors = await response.json();
+    
+            const doctorFilter = document.getElementById('doctorFilter');
             const doctorSelect = document.getElementById('doctorSelect');
+    
             doctors.forEach(doctor => {
-                const option = document.createElement('option');
-                option.value = doctor.id;
-                option.textContent = `Dr. ${doctor.firstName} ${doctor.lastName}`;
-                doctorSelect.appendChild(option);
+                const option = new Option(`Dr. ${doctor.first_name} ${doctor.last_name}`, doctor.user_id);
+                doctorFilter?.add(option.cloneNode(true));
+                doctorSelect?.add(option);
             });
         } catch (error) {
             console.error('Error loading doctors:', error);
-            showAlert('Error loading doctors', 'danger');
+            showErrorAlert('Failed to load doctors list');
         }
     }
 
     // Function to load patients
     async function loadPatients() {
         try {
-            const response = await fetch('/api/patients/', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
-            });
+            const response = await fetch(`${API_BASE_URL}/patients/`);
             const patients = await response.json();
+    
             const patientSelect = document.getElementById('patientSelect');
+            patientSelect.innerHTML = '<option value="">Select Patient</option>';
+    
             patients.forEach(patient => {
-                const option = document.createElement('option');
-                option.value = patient.id;
-                option.textContent = `${patient.firstName} ${patient.lastName}`;
-                patientSelect.appendChild(option);
+                const option = new Option(
+                    `${patient.first_name} ${patient.last_name}`,
+                    patient.user_id
+                );
+                patientSelect.add(option);
             });
         } catch (error) {
             console.error('Error loading patients:', error);
-            showAlert('Error loading patients', 'danger');
+            showErrorAlert('Failed to load patients list');
         }
     }
 
     // Function to load medications
     async function loadMedications() {
         try {
-            const response = await fetch('/api/medications/', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
-            });
-            const medications = await response.json();
-            const medicationSelects = document.getElementsByClassName('medication-select');
-            Array.from(medicationSelects).forEach(select => {
-                medications.forEach(medication => {
-                    const option = document.createElement('option');
-                    option.value = medication.id;
-                    option.textContent = medication.name;
-                    select.appendChild(option);
-                });
+            const response = await fetch(`${API_BASE_URL}/medicines/`);
+            const medicines = await response.json();
+            const medicationSelect = document.getElementById('medicationSelect');
+    
+            console.log(medicines);
+            medicines.forEach(medicine => {
+                const option = new Option(`${medicine.name}`, medicine.id);
+                medicationSelect.add(option);
             });
         } catch (error) {
-            console.error('Error loading medications:', error);
-            showAlert('Error loading medications', 'danger');
+            console.error('Error loading medicines:', error);
+            showErrorAlert('Failed to load medicines list');
         }
     }
 
     // Function to load prescriptions
     async function loadPrescriptions() {
         try {
-            const response = await fetch('/api/prescriptions/', {
+            const response = await fetch(`${API_BASE_URL}/prescriptions/`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 }
@@ -163,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         try {
-            const response = await fetch('/api/prescriptions/', {
+            const response = await fetch(`${API_BASE_URL}/prescriptions/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -179,7 +202,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 loadPrescriptions();
                 showAlert('Prescription created successfully!', 'success');
             } else {
-                throw new Error('Failed to create prescription');
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to create prescription');
             }
         } catch (error) {
             console.error('Error creating prescription:', error);
@@ -193,6 +217,14 @@ document.addEventListener('DOMContentLoaded', function() {
         medicationItem.querySelectorAll('input').forEach(input => input.value = '');
         medicationItem.querySelector('select').value = '';
 
+        // Repopulate medication options
+        const medicationSelect = medicationItem.querySelector('.medication-select');
+        medicationSelect.innerHTML = '';
+        const originalSelect = document.querySelector('.medication-select');
+        Array.from(originalSelect.options).forEach(option => {
+            medicationSelect.add(option.cloneNode(true));
+        });
+
         const removeBtn = medicationItem.querySelector('.remove-medication');
         removeBtn.addEventListener('click', () => medicationItem.remove());
 
@@ -205,54 +237,58 @@ document.addEventListener('DOMContentLoaded', function() {
         const status = statusFilter.value;
         const date = dateFilter.value;
 
-        loadPrescriptions(); // In real implementation, these filters would be passed to the API
-    }
-
-    // Helper function for status badge color
-    function getStatusBadgeClass(status) {
-        const statusClasses = {
-            'active': 'success',
-            'completed': 'info',
-            'canceled': 'danger'
-        };
-        return statusClasses[status.toLowerCase()] || 'secondary';
-    }
-
-    // Helper function to format date
-    function formatDate(dateString) {
-        return new Date(dateString).toLocaleDateString();
-    }
-
-    // Helper function to show alerts
-    function showAlert(message, type) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.card'));
-        setTimeout(() => alertDiv.remove(), 5000);
-    }
-
-    // Helper function to debounce search input
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
+        // Build query parameters
+        const filters = {};
+        
+        if (status && status !== 'all') {
+            filters.status = status;
+        }
+        
+        if (date && date !== 'all') {
+            const today = new Date();
+            if (date === 'today') {
+                filters.date = today.toISOString().split('T')[0];
+            } else if (date === 'week') {
+                const weekAgo = new Date(today);
+                weekAgo.setDate(today.getDate() - 7);
+                filters.start_date = weekAgo.toISOString().split('T')[0];
+                filters.end_date = today.toISOString().split('T')[0];
+            } else if (date === 'month') {
+                const monthAgo = new Date(today);
+                monthAgo.setMonth(today.getMonth() - 1);
+                filters.start_date = monthAgo.toISOString().split('T')[0];
+                filters.end_date = today.toISOString().split('T')[0];
+            }
+        }
+        
+        if (searchTerm) {
+            filters.search = searchTerm;
+        }
+        
+        // Convert filters to query string
+        const queryString = new URLSearchParams(filters).toString();
+        
+        // Fetch filtered prescriptions
+        fetch(`${API_BASE_URL}/prescriptions/?${queryString}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            }
+        })
+        .then(response => response.json())
+        .then(prescriptions => {
+            displayPrescriptions(prescriptions);
+        })
+        .catch(error => {
+            console.error('Error filtering prescriptions:', error);
+            showAlert('Error filtering prescriptions', 'danger');
+        });
     }
 });
 
 // Global functions for prescription actions
 window.viewPrescriptionDetails = async function(prescriptionId) {
     try {
-        const response = await fetch(`/api/prescriptions/${prescriptionId}/`, {
+        const response = await fetch(`${API_BASE_URL}/prescriptions/${prescriptionId}/`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('authToken')}`
             }
@@ -302,6 +338,11 @@ window.viewPrescriptionDetails = async function(prescriptionId) {
 
         const modal = new bootstrap.Modal(document.getElementById('prescriptionDetailsModal'));
         modal.show();
+        
+        // Setup print button
+        document.getElementById('printPrescription').onclick = function() {
+            printPrescription(prescription.id);
+        };
     } catch (error) {
         console.error('Error loading prescription details:', error);
         showAlert('Error loading prescription details. Please try again.', 'danger');
@@ -309,5 +350,5 @@ window.viewPrescriptionDetails = async function(prescriptionId) {
 };
 
 window.printPrescription = function(prescriptionId) {
-    window.open(`/api/prescriptions/${prescriptionId}/print/`, '_blank');
+    window.open(`${API_BASE_URL}/prescriptions/${prescriptionId}/print/`, '_blank');
 };
