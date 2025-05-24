@@ -30,6 +30,7 @@ class PrescriptionSerializer(serializers.ModelSerializer):
     DOCTOR_SERVICE_URL = f"{BASE_URL}/doctors"
     PATIENT_SERVICE_URL = f"{BASE_URL}/patients"
     
+    id = serializers.SerializerMethodField()
     medications = MedicationItemInputSerializer(many=True, write_only=True)
     medication_details = serializers.SerializerMethodField(read_only=True)
     patient_name = serializers.SerializerMethodField(read_only=True)
@@ -39,6 +40,10 @@ class PrescriptionSerializer(serializers.ModelSerializer):
         model = Prescription
         fields = '__all__'
         read_only_fields = ['prescription_id', 'created_at', 'updated_at']
+    
+    def get_id(self, obj):
+        """Return the prescription_id as the id field for API consistency"""
+        return obj.prescription_id
     
     def get_medication_details(self, obj):
         """Fetch medication details from medicine service"""

@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -18,6 +18,7 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
     filterset_fields = ['patient_id', 'doctor_id', 'status', 'pharmacy_id', 'is_refillable']
     search_fields = ['prescription_id', 'diagnosis', 'notes']
     ordering_fields = ['date_prescribed', 'created_at', 'updated_at']
+    lookup_field = 'prescription_id'
     
     def get_permissions(self):
         if self.action == 'create':
@@ -49,6 +50,21 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+    
+    def get_object(self):
+        """
+        Returns the object the view is displaying.
+        Override to support lookup by prescription_id.
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        # Lookup by prescription_id instead of pk
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        
+        obj = get_object_or_404(queryset, **filter_kwargs)
+        self.check_object_permissions(self.request, obj)
+        return obj
     
     def list(self, request, *args, **kwargs):
         """Override list to add medicine, doctor and patient details"""

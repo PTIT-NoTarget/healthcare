@@ -331,15 +331,22 @@ document.addEventListener('DOMContentLoaded', function() {
 // Global functions for prescription actions
 window.viewPrescriptionDetails = async function(prescriptionId) {
     try {
+        // Use the prescription ID directly for the API call
         const response = await fetch(`${API_BASE_URL}/prescriptions/${prescriptionId}/`, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('authToken')}`
             }
         });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch prescription details: ${response.status}`);
+        }
+        
         const prescription = await response.json();
+        console.log('Prescription details:', prescription);
 
         // Map prescription fields to match the API response
-        const id = prescription.prescription_id || 'Unknown';
+        const id = prescription.id || prescription.prescription_id || 'Unknown';
         const status = prescription.status || 'Unknown';
         const patientName = prescription.patient_name || 'Unknown Patient';
         const doctorName = prescription.doctor_name || 'Unknown Doctor';
@@ -414,6 +421,7 @@ window.viewPrescriptionDetails = async function(prescriptionId) {
 };
 
 window.printPrescription = function(prescriptionId) {
+    console.log('Printing prescription with ID:', prescriptionId);
     window.open(`${API_BASE_URL}/prescriptions/${prescriptionId}/print/`, '_blank');
 };
 
