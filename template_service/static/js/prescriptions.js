@@ -7,17 +7,6 @@ const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
 };
 
-// Helper function for status badge color
-function getStatusBadgeClass(status) {
-    if (!status) return 'secondary';
-    const statusClasses = {
-        'active': 'success',
-        'completed': 'info',
-        'canceled': 'danger'
-    };
-    return statusClasses[status.toLowerCase()] || 'secondary';
-}
-
 // Helper function to debounce search input
 function debounce(func, wait) {
     let timeout;
@@ -34,12 +23,14 @@ function debounce(func, wait) {
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize variables
     const searchInput = document.getElementById('searchInput');
-    const statusFilter = document.getElementById('statusFilter');
     const dateFilter = document.getElementById('dateFilter');
     const prescriptionsList = document.getElementById('prescriptionsList');
     const prescriptionForm = document.getElementById('prescriptionForm');
     const savePrescriptionBtn = document.getElementById('savePrescription');
     const addMedicationBtn = document.getElementById('addMedication');
+    
+    // Store all prescriptions for client-side filtering
+    let allPrescriptions = [];
 
     // Load initial data
     loadDoctors();
@@ -49,10 +40,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Event listeners
     searchInput.addEventListener('input', debounce(filterPrescriptions, 300));
-    statusFilter.addEventListener('change', filterPrescriptions);
     dateFilter.addEventListener('change', filterPrescriptions);
     savePrescriptionBtn.addEventListener('click', savePrescription);
     addMedicationBtn.addEventListener('click', addMedicationField);
+    
+    // Add event listener for initial medication remove button
+    document.querySelector('.remove-medication').addEventListener('click', function(e) {
+        // Don't remove if it's the only medication item
+        if (document.querySelectorAll('.medication-item').length > 1) {
+            e.target.closest('.medication-item').remove();
+        } else {
+            showAlert('At least one medication is required', 'warning');
+        }
+    });
 
     // Function to load doctors
     async function loadDoctors() {
@@ -60,17 +60,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch(`${API_BASE_URL}/doctors/`);
             const doctors = await response.json();
     
-            const doctorFilter = document.getElementById('doctorFilter');
             const doctorSelect = document.getElementById('doctorSelect');
+            if (!doctorSelect) return;
+            
+            doctorSelect.innerHTML = '<option value="">Select Doctor</option>';
     
             doctors.forEach(doctor => {
                 const option = new Option(`Dr. ${doctor.first_name} ${doctor.last_name}`, doctor.user_id);
-                doctorFilter?.add(option.cloneNode(true));
-                doctorSelect?.add(option);
+                doctorSelect.add(option);
             });
         } catch (error) {
             console.error('Error loading doctors:', error);
-            showErrorAlert('Failed to load doctors list');
+            showAlert('Failed to load doctors list', 'danger');
         }
     }
 
@@ -81,6 +82,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const patients = await response.json();
     
             const patientSelect = document.getElementById('patientSelect');
+            if (!patientSelect) return;
+            
             patientSelect.innerHTML = '<option value="">Select Patient</option>';
     
             patients.forEach(patient => {
@@ -92,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         } catch (error) {
             console.error('Error loading patients:', error);
-            showErrorAlert('Failed to load patients list');
+            showAlert('Failed to load patients list', 'danger');
         }
     }
 
@@ -107,22 +110,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            const medicationSelect = document.getElementById('medicationSelect');
-            medicationSelect.innerHTML = '<option value="">Select Medication</option>';
-    
-            console.log('Loaded medicines:', medicines);
-            medicines.forEach(medicine => {
-                // Check if medicine has a valid ID field
-                if (!medicine.id) {
-                    console.warn('Medicine missing ID:', medicine);
-                    return;
-                }
-                const option = new Option(`${medicine.name}`, medicine.id);
-                medicationSelect.add(option);
+            // Get all medication selects
+            const medicationSelects = document.querySelectorAll('.medication-select');
+            
+            medicationSelects.forEach(select => {
+                select.innerHTML = '<option value="">Select Medication</option>';
+                
+                medicines.forEach(medicine => {
+                    // Check if medicine has a valid ID field
+                    if (!medicine.id) {
+                        console.warn('Medicine missing ID:', medicine);
+                        return;
+                    }
+                    const option = new Option(`${medicine.name} (${medicine.strength})`, medicine.id);
+                    select.add(option);
+                });
             });
+            
+            console.log('Loaded medicines:', medicines);
         } catch (error) {
             console.error('Error loading medicines:', error);
-            showErrorAlert('Failed to load medicines list');
+            showAlert('Failed to load medicines list', 'danger');
         }
     }
 
@@ -149,6 +157,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error('Invalid prescription data format');
             }
             
+            // Store all prescriptions for client-side filtering
+            allPrescriptions = prescriptions;
+            
+            // Display all prescriptions initially
             displayPrescriptions(prescriptions);
         } catch (error) {
             console.error('Error loading prescriptions:', error);
@@ -165,8 +177,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         prescriptionsList.innerHTML = prescriptions.map(prescription => {
             // Use prescription_id instead of id since id is null
-            const id = prescription.prescription_id || 'Unknown';
-            const status = prescription.status || 'Unknown';
+            const id = prescription.id || prescription.prescription_id || 'Unknown';
             const patientName = prescription.patient_name || 'Unknown Patient';
             const doctorName = prescription.doctor_name || 'Unknown Doctor';
             const createdAt = prescription.date_prescribed || prescription.created_at || null;
@@ -176,9 +187,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="col-md-6 mb-4">
                     <div class="card h-100">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="mb-3">
                                 <h5 class="card-title mb-0">Prescription #${id}</h5>
-                                <span class="badge bg-${getStatusBadgeClass(status)}">${status}</span>
                             </div>
                             <p class="card-text">
                                 <strong>Patient:</strong> ${patientName}<br>
@@ -190,9 +200,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <button class="btn btn-sm btn-outline-primary" onclick="viewPrescriptionDetails('${id}')">
                                     <i class="fas fa-eye"></i> View
                                 </button>
-                                <button class="btn btn-sm btn-outline-info" onclick="printPrescription('${id}')">
-                                    <i class="fas fa-print"></i> Print
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -203,32 +210,65 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to save prescription
     async function savePrescription() {
-        const medications = [];
-        const medicationItems = document.getElementsByClassName('medication-item');
-
-        Array.from(medicationItems).forEach(item => {
-            const medicationId = item.querySelector('.medication-select').value;
-            const quantity = item.querySelector('input[placeholder="Quantity"]').value;
-            const dosage = item.querySelector('input[placeholder="Dosage"]').value;
-            const duration = item.querySelector('input[placeholder="Duration"]').value;
-
-            medications.push({
-                medicationId,
-                quantity: parseInt(quantity),
-                dosage,
-                duration
-            });
-        });
-
-        const prescriptionData = {
-            patientId: document.getElementById('patientSelect').value,
-            doctorId: document.getElementById('doctorSelect').value,
-            diagnosis: document.getElementById('diagnosis').value,
-            instructions: document.getElementById('instructions').value,
-            medications
-        };
-
         try {
+            const medications = [];
+            const medicationItems = document.querySelectorAll('.medication-item');
+            
+            // Validate form
+            const patientId = document.getElementById('patientSelect').value;
+            const doctorId = document.getElementById('doctorSelect').value;
+            const diagnosis = document.getElementById('diagnosis').value;
+            const instructions = document.getElementById('instructions').value;
+            
+            if (!patientId || !doctorId || !diagnosis || !instructions) {
+                showAlert('Please fill in all required fields', 'warning');
+                return;
+            }
+
+            // Check each medication item
+            let isValid = true;
+            medicationItems.forEach((item, index) => {
+                const medicineId = item.querySelector('.medication-select').value;
+                const frequency = item.querySelector('input[placeholder="Frequency"]').value;
+                const dosage = item.querySelector('input[placeholder="Dosage"]').value;
+                const duration = item.querySelector('input[placeholder="Duration"]').value;
+
+                if (!medicineId || !frequency || !dosage || !duration) {
+                    showAlert(`Please complete all fields for medication #${index + 1}`, 'warning');
+                    isValid = false;
+                    return;
+                }
+
+                medications.push({
+                    medicine_id: medicineId,
+                    frequency: frequency,
+                    dosage: dosage,
+                    duration: duration,
+                    instructions: `Take ${dosage} ${frequency} for ${duration}`
+                });
+            });
+            
+            if (!isValid) return;
+            if (medications.length === 0) {
+                showAlert('Please add at least one medication', 'warning');
+                return;
+            }
+
+            // Construct the prescription data
+            const prescriptionData = {
+                patient_id: patientId,
+                doctor_id: doctorId,
+                diagnosis: diagnosis,
+                notes: instructions,
+                medications: medications
+            };
+            
+            console.log('Saving prescription:', prescriptionData);
+
+            // Show loading state
+            savePrescriptionBtn.disabled = true;
+            savePrescriptionBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+
             const response = await fetch(`${API_BASE_URL}/prescriptions/`, {
                 method: 'POST',
                 headers: {
@@ -238,93 +278,138 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify(prescriptionData)
             });
 
+            // Reset button state
+            savePrescriptionBtn.disabled = false;
+            savePrescriptionBtn.innerHTML = '<i class="fas fa-save"></i> Create Prescription';
+
             if (response.ok) {
+                const newPrescription = await response.json();
+                console.log('Created prescription:', newPrescription);
+                
+                // Close modal and reset form
                 const modal = bootstrap.Modal.getInstance(document.getElementById('newPrescriptionModal'));
                 modal.hide();
                 prescriptionForm.reset();
-                loadPrescriptions();
+                
+                // Reset medication items
+                const medicationsList = document.getElementById('medicationsList');
+                const firstItem = medicationItems[0].cloneNode(true);
+                
+                // Clear all values in the first item
+                firstItem.querySelectorAll('select, input').forEach(el => el.value = '');
+                
+                // Add event listener to the remove button
+                firstItem.querySelector('.remove-medication').addEventListener('click', function() {
+                    showAlert('At least one medication is required', 'warning');
+                });
+                
+                medicationsList.innerHTML = '';
+                medicationsList.appendChild(firstItem);
+                
+                // Reload medications in the first item
+                loadMedications();
+                
+                // Reload prescriptions list
+                await loadPrescriptions();
+                
                 showAlert('Prescription created successfully!', 'success');
             } else {
                 const error = await response.json();
-                throw new Error(error.message || 'Failed to create prescription');
+                throw new Error(error.message || error.detail || 'Failed to create prescription');
             }
         } catch (error) {
             console.error('Error creating prescription:', error);
-            showAlert('Error creating prescription. Please try again.', 'danger');
+            showAlert(`Error creating prescription: ${error.message}`, 'danger');
         }
     }
 
     // Function to add medication field
     function addMedicationField() {
-        const medicationItem = document.querySelector('.medication-item').cloneNode(true);
-        medicationItem.querySelectorAll('input').forEach(input => input.value = '');
-        medicationItem.querySelector('select').value = '';
+        // Clone the first medication item
+        const firstMedicationItem = document.querySelector('.medication-item');
+        const medicationItem = firstMedicationItem.cloneNode(true);
+        
+        // Clear all inputs
+        medicationItem.querySelectorAll('input, select').forEach(input => input.value = '');
 
-        // Repopulate medication options
-        const medicationSelect = medicationItem.querySelector('.medication-select');
-        medicationSelect.innerHTML = '';
-        const originalSelect = document.querySelector('.medication-select');
-        Array.from(originalSelect.options).forEach(option => {
-            medicationSelect.add(option.cloneNode(true));
+        // Add event listener to remove button
+        const removeBtn = medicationItem.querySelector('.remove-medication');
+        removeBtn.addEventListener('click', function() {
+            medicationItem.remove();
         });
 
-        const removeBtn = medicationItem.querySelector('.remove-medication');
-        removeBtn.addEventListener('click', () => medicationItem.remove());
-
+        // Add the new medication item to the list
         document.getElementById('medicationsList').appendChild(medicationItem);
+        
+        // Load medications in the new item
+        const medicationSelect = medicationItem.querySelector('.medication-select');
+        populateMedicationSelect(medicationSelect);
+    }
+    
+    // Function to populate a medication select dropdown
+    async function populateMedicationSelect(select) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/medicines/`);
+            const medicines = await response.json();
+            
+            select.innerHTML = '<option value="">Select Medication</option>';
+            
+            medicines.forEach(medicine => {
+                if (!medicine.id) return;
+                const option = new Option(`${medicine.name} (${medicine.strength})`, medicine.id);
+                select.add(option);
+            });
+        } catch (error) {
+            console.error('Error loading medicines for select:', error);
+        }
     }
 
     // Function to filter prescriptions
     function filterPrescriptions() {
         const searchTerm = searchInput.value.toLowerCase();
-        const status = statusFilter.value;
         const date = dateFilter.value;
-
-        // Build query parameters
-        const filters = {};
         
-        if (status && status !== 'all') {
-            filters.status = status;
-        }
-        
-        if (date && date !== 'all') {
-            const today = new Date();
-            if (date === 'today') {
-                filters.date = today.toISOString().split('T')[0];
-            } else if (date === 'week') {
-                const weekAgo = new Date(today);
-                weekAgo.setDate(today.getDate() - 7);
-                filters.start_date = weekAgo.toISOString().split('T')[0];
-                filters.end_date = today.toISOString().split('T')[0];
-            } else if (date === 'month') {
-                const monthAgo = new Date(today);
-                monthAgo.setMonth(today.getMonth() - 1);
-                filters.start_date = monthAgo.toISOString().split('T')[0];
-                filters.end_date = today.toISOString().split('T')[0];
+        // Apply client-side filtering to allPrescriptions
+        const filteredPrescriptions = allPrescriptions.filter(prescription => {
+            // Apply search filter
+            const prescriptionId = prescription.id || prescription.prescription_id || '';
+            const patientName = prescription.patient_name || '';
+            const doctorName = prescription.doctor_name || '';
+            const diagnosis = prescription.diagnosis || '';
+            
+            const matchesSearch = !searchTerm || 
+                prescriptionId.toLowerCase().includes(searchTerm) ||
+                patientName.toLowerCase().includes(searchTerm) ||
+                doctorName.toLowerCase().includes(searchTerm) ||
+                diagnosis.toLowerCase().includes(searchTerm);
+            
+            if (!matchesSearch) return false;
+            
+            // Apply date filter
+            if (date && date !== 'all') {
+                const prescriptionDate = new Date(prescription.date_prescribed || prescription.created_at);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                if (date === 'today') {
+                    const tomorrow = new Date(today);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    return prescriptionDate >= today && prescriptionDate < tomorrow;
+                } else if (date === 'week') {
+                    const weekAgo = new Date(today);
+                    weekAgo.setDate(today.getDate() - 7);
+                    return prescriptionDate >= weekAgo;
+                } else if (date === 'month') {
+                    const monthAgo = new Date(today);
+                    monthAgo.setMonth(today.getMonth() - 1);
+                    return prescriptionDate >= monthAgo;
+                }
             }
-        }
-        
-        if (searchTerm) {
-            filters.search = searchTerm;
-        }
-        
-        // Convert filters to query string
-        const queryString = new URLSearchParams(filters).toString();
-        
-        // Fetch filtered prescriptions
-        fetch(`${API_BASE_URL}/prescriptions/?${queryString}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            }
-        })
-        .then(response => response.json())
-        .then(prescriptions => {
-            displayPrescriptions(prescriptions);
-        })
-        .catch(error => {
-            console.error('Error filtering prescriptions:', error);
-            showAlert('Error filtering prescriptions', 'danger');
+            
+            return true;
         });
+        
+        displayPrescriptions(filteredPrescriptions);
     }
 });
 
@@ -347,7 +432,6 @@ window.viewPrescriptionDetails = async function(prescriptionId) {
 
         // Map prescription fields to match the API response
         const id = prescription.id || prescription.prescription_id || 'Unknown';
-        const status = prescription.status || 'Unknown';
         const patientName = prescription.patient_name || 'Unknown Patient';
         const doctorName = prescription.doctor_name || 'Unknown Doctor';
         const createdAt = prescription.date_prescribed || prescription.created_at || null;
@@ -361,7 +445,6 @@ window.viewPrescriptionDetails = async function(prescriptionId) {
                 <div class="col-md-6">
                     <p><strong>Prescription ID:</strong> #${id}</p>
                     <p><strong>Date:</strong> ${formatDate(createdAt)}</p>
-                    <p><strong>Status:</strong> <span class="badge bg-${getStatusBadgeClass(status)}">${status}</span></p>
                 </div>
                 <div class="col-md-6">
                     <p><strong>Patient:</strong> ${patientName}</p>
@@ -378,7 +461,6 @@ window.viewPrescriptionDetails = async function(prescriptionId) {
                             // Map medication fields to match the API response
                             const name = med.medicine_name || 'Unknown Medication';
                             const dosage = med.dosage || 'Not specified';
-                            const quantity = med.quantity || '1';
                             const duration = med.duration || 'Not specified';
                             const frequency = med.frequency || 'Not specified';
                             const medicineInstructions = med.instructions || 'Not specified';
@@ -409,23 +491,13 @@ window.viewPrescriptionDetails = async function(prescriptionId) {
 
         const modal = new bootstrap.Modal(document.getElementById('prescriptionDetailsModal'));
         modal.show();
-        
-        // Setup print button
-        document.getElementById('printPrescription').onclick = function() {
-            printPrescription(id);
-        };
     } catch (error) {
         console.error('Error loading prescription details:', error);
         showAlert('Error loading prescription details. Please try again.', 'danger');
     }
 };
 
-window.printPrescription = function(prescriptionId) {
-    console.log('Printing prescription with ID:', prescriptionId);
-    window.open(`${API_BASE_URL}/prescriptions/${prescriptionId}/print/`, '_blank');
-};
-
-// Helper function for alerts since it's missing in the code
+// Helper function for alerts
 function showAlert(message, type) {
     const alertContainer = document.querySelector('.alert-container') || document.createElement('div');
     if (!document.querySelector('.alert-container')) {

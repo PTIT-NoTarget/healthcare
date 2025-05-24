@@ -37,25 +37,8 @@ class Prescription(models.Model):
     
     # Medications will only store medicine IDs and relevant prescription details
     medications = models.JSONField(default=list)
-    # Example structure of each medication in the list:
-    # {
-    #   "medicine_id": "id_value",
-    #   "dosage": "1 tablet",
-    #   "frequency": "twice daily",
-    #   "duration": "7 days",
-    #   "instructions": "Take with food"
-    # }
+
     
-    status = models.CharField(
-        max_length=20,
-        choices=[
-            ('CREATED', 'Created'),
-            ('DISPENSED', 'Dispensed'),
-            ('COMPLETED', 'Completed'),
-            ('CANCELLED', 'Cancelled')
-        ],
-        default='CREATED'
-    )
     notes = models.TextField(blank=True, null=True)
     pharmacy_id = models.CharField(max_length=50, blank=True, null=True)  # Optional, if sent to a specific pharmacy
     dispense_date = models.DateTimeField(blank=True, null=True)

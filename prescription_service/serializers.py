@@ -8,7 +8,7 @@ class MedicationItemInputSerializer(serializers.Serializer):
     dosage = serializers.CharField(max_length=100)
     frequency = serializers.CharField(max_length=100)
     duration = serializers.CharField(max_length=100)
-    instructions = serializers.CharField()
+    instructions = serializers.CharField(required=False)
 
 
 class MedicationItemOutputSerializer(serializers.Serializer):
