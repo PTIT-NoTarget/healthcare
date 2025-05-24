@@ -28,34 +28,24 @@ class ListField(models.Field):
         return json.dumps(value)
 
 
-class MedicationItem(models.Model):
-    medicine_id = models.CharField(max_length=50)
-    medicine_name = models.CharField(max_length=200)
-    dosage = models.CharField(max_length=100)
-    frequency = models.CharField(max_length=100)  # e.g., "3 times a day"
-    duration = models.CharField(max_length=100)  # e.g., "7 days"
-    instructions = models.TextField()
-
-    class Meta:
-        abstract = True
-
-
-class MedicationItemForm(forms.ModelForm):
-    class Meta:
-        model = MedicationItem
-        fields = '__all__'
-
-
 class Prescription(models.Model):
     prescription_id = models.CharField(max_length=50, unique=True)
     patient_id = models.CharField(max_length=50)
     doctor_id = models.CharField(max_length=50)
     date_prescribed = models.DateTimeField(auto_now_add=True)
     diagnosis = models.TextField()
-    medications = models.ArrayField(
-        model_container=MedicationItem,
-        model_form_class=MedicationItemForm
-    )
+    
+    # Medications will only store medicine IDs and relevant prescription details
+    medications = models.JSONField(default=list)
+    # Example structure of each medication in the list:
+    # {
+    #   "medicine_id": "id_value",
+    #   "dosage": "1 tablet",
+    #   "frequency": "twice daily",
+    #   "duration": "7 days",
+    #   "instructions": "Take with food"
+    # }
+    
     status = models.CharField(
         max_length=20,
         choices=[

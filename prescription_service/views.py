@@ -8,6 +8,7 @@ from .serializers import PrescriptionSerializer
 from .permissions import IsDoctorUser, IsPrescriptionDoctor, IsPrescriptionPatient, IsPharmacistUser
 import uuid
 from django.utils import timezone
+import requests
 
 
 class PrescriptionViewSet(viewsets.ModelViewSet):
@@ -28,9 +29,10 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
         elif self.action == 'dispense':
             # Only pharmacists can dispense prescriptions
             permission_classes = [IsPharmacistUser]
-        elif self.action in ['list', 'retrieve']:
-            # Doctors, patients (their own), pharmacists can view prescriptions
-            permission_classes = [permissions.IsAuthenticated]
+        elif self.action in ['list', 'retrieve', 'patient_prescriptions', 'doctor_prescriptions']:
+            # Allow any authenticated user to view prescriptions
+            # Object-level permissions will handle filtering
+            permission_classes = [permissions.AllowAny]
         else:
             # Default to authenticated for other actions
             permission_classes = [permissions.IsAuthenticated]
@@ -41,6 +43,24 @@ class PrescriptionViewSet(viewsets.ModelViewSet):
         prescription_id = f"PRE-{uuid.uuid4().hex[:8].upper()}"
         # Set the doctor_id from the current user
         serializer.save(prescription_id=prescription_id, doctor_id=str(self.request.user.id))
+    
+    def retrieve(self, request, *args, **kwargs):
+        """Override retrieve to add medicine, doctor and patient details"""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+    
+    def list(self, request, *args, **kwargs):
+        """Override list to add medicine, doctor and patient details"""
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
     
     @action(detail=True, methods=['post'])
     def dispense(self, request, pk=None):

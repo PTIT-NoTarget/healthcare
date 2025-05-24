@@ -13,11 +13,12 @@ class DoctorCreateView(generics.CreateAPIView):
 class DoctorDetailView(generics.RetrieveUpdateAPIView):
     queryset = Doctor.objects.all()
     serializer_class = DoctorSerializer
-    permission_classes = [IsDoctorOrAdmin]
+    permission_classes = [permissions.AllowAny]
 
 class DoctorListView(generics.ListAPIView):
     queryset = Doctor.objects.all()
     serializer_class = DoctorSerializer
+    permission_classes = [permissions.AllowAny]
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()

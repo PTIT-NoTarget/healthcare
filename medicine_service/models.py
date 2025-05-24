@@ -1,6 +1,7 @@
 from djongo import models
 from django import forms
 import json
+from bson import ObjectId
 
 
 class ListField(models.Field):
@@ -29,6 +30,8 @@ class ListField(models.Field):
 
 
 class Medicine(models.Model):
+    # Explicitly define _id field for MongoDB
+    _id = models.ObjectIdField(primary_key=True, default=ObjectId)
     name = models.CharField(max_length=200)
     generic_name = models.CharField(max_length=200)
     manufacturer = models.CharField(max_length=200)

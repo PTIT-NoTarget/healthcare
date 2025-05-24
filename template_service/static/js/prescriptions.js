@@ -3,11 +3,13 @@ const API_BASE_URL = '/api';
 
 // Utility functions
 const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString();
 };
 
 // Helper function for status badge color
 function getStatusBadgeClass(status) {
+    if (!status) return 'secondary';
     const statusClasses = {
         'active': 'success',
         'completed': 'info',
@@ -99,10 +101,22 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const response = await fetch(`${API_BASE_URL}/medicines/`);
             const medicines = await response.json();
+            
+            if (!medicines || !Array.isArray(medicines)) {
+                console.error('Invalid medicines data:', medicines);
+                return;
+            }
+            
             const medicationSelect = document.getElementById('medicationSelect');
+            medicationSelect.innerHTML = '<option value="">Select Medication</option>';
     
-            console.log(medicines);
+            console.log('Loaded medicines:', medicines);
             medicines.forEach(medicine => {
+                // Check if medicine has a valid ID field
+                if (!medicine.id) {
+                    console.warn('Medicine missing ID:', medicine);
+                    return;
+                }
                 const option = new Option(`${medicine.name}`, medicine.id);
                 medicationSelect.add(option);
             });
@@ -115,47 +129,76 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to load prescriptions
     async function loadPrescriptions() {
         try {
+            // Show loading indicator
+            prescriptionsList.innerHTML = '<div class="col-12 text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+            
             const response = await fetch(`${API_BASE_URL}/prescriptions/`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 }
             });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error ${response.status}`);
+            }
+            
             const prescriptions = await response.json();
+            console.log('Loaded prescriptions:', prescriptions);
+            
+            if (!prescriptions || !Array.isArray(prescriptions)) {
+                throw new Error('Invalid prescription data format');
+            }
+            
             displayPrescriptions(prescriptions);
         } catch (error) {
             console.error('Error loading prescriptions:', error);
-            showAlert('Error loading prescriptions', 'danger');
+            prescriptionsList.innerHTML = '<div class="col-12 alert alert-danger">Error loading prescriptions. Please try again.</div>';
         }
     }
 
     // Function to display prescriptions
     function displayPrescriptions(prescriptions) {
-        prescriptionsList.innerHTML = prescriptions.map(prescription => `
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="card-title mb-0">Prescription #${prescription.id}</h5>
-                            <span class="badge bg-${getStatusBadgeClass(prescription.status)}">${prescription.status}</span>
-                        </div>
-                        <p class="card-text">
-                            <strong>Patient:</strong> ${prescription.patientName}<br>
-                            <strong>Doctor:</strong> Dr. ${prescription.doctorName}<br>
-                            <strong>Date:</strong> ${formatDate(prescription.createdAt)}<br>
-                            <strong>Medications:</strong> ${prescription.medications.length} items
-                        </p>
-                        <div class="d-flex justify-content-end gap-2">
-                            <button class="btn btn-sm btn-outline-primary" onclick="viewPrescriptionDetails('${prescription.id}')">
-                                <i class="fas fa-eye"></i> View
-                            </button>
-                            <button class="btn btn-sm btn-outline-info" onclick="printPrescription('${prescription.id}')">
-                                <i class="fas fa-print"></i> Print
-                            </button>
+        if (!prescriptions || prescriptions.length === 0) {
+            prescriptionsList.innerHTML = '<div class="col-12 text-center">No prescriptions found</div>';
+            return;
+        }
+        
+        prescriptionsList.innerHTML = prescriptions.map(prescription => {
+            // Use prescription_id instead of id since id is null
+            const id = prescription.prescription_id || 'Unknown';
+            const status = prescription.status || 'Unknown';
+            const patientName = prescription.patient_name || 'Unknown Patient';
+            const doctorName = prescription.doctor_name || 'Unknown Doctor';
+            const createdAt = prescription.date_prescribed || prescription.created_at || null;
+            const medications = prescription.medication_details || [];
+            
+            return `
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title mb-0">Prescription #${id}</h5>
+                                <span class="badge bg-${getStatusBadgeClass(status)}">${status}</span>
+                            </div>
+                            <p class="card-text">
+                                <strong>Patient:</strong> ${patientName}<br>
+                                <strong>Doctor:</strong> ${doctorName}<br>
+                                <strong>Date:</strong> ${formatDate(createdAt)}<br>
+                                <strong>Medications:</strong> ${medications.length} items
+                            </p>
+                            <div class="d-flex justify-content-end gap-2">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewPrescriptionDetails('${id}')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button class="btn btn-sm btn-outline-info" onclick="printPrescription('${id}')">
+                                    <i class="fas fa-print"></i> Print
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     // Function to save prescription
@@ -295,43 +338,64 @@ window.viewPrescriptionDetails = async function(prescriptionId) {
         });
         const prescription = await response.json();
 
+        // Map prescription fields to match the API response
+        const id = prescription.prescription_id || 'Unknown';
+        const status = prescription.status || 'Unknown';
+        const patientName = prescription.patient_name || 'Unknown Patient';
+        const doctorName = prescription.doctor_name || 'Unknown Doctor';
+        const createdAt = prescription.date_prescribed || prescription.created_at || null;
+        const diagnosis = prescription.diagnosis || 'No diagnosis provided';
+        const instructions = prescription.notes || 'No instructions provided';
+        const medications = prescription.medication_details || [];
+
         const detailsDiv = document.getElementById('prescriptionDetails');
         detailsDiv.innerHTML = `
             <div class="row">
                 <div class="col-md-6">
-                    <p><strong>Prescription ID:</strong> #${prescription.id}</p>
-                    <p><strong>Date:</strong> ${formatDate(prescription.createdAt)}</p>
-                    <p><strong>Status:</strong> <span class="badge bg-${getStatusBadgeClass(prescription.status)}">${prescription.status}</span></p>
+                    <p><strong>Prescription ID:</strong> #${id}</p>
+                    <p><strong>Date:</strong> ${formatDate(createdAt)}</p>
+                    <p><strong>Status:</strong> <span class="badge bg-${getStatusBadgeClass(status)}">${status}</span></p>
                 </div>
                 <div class="col-md-6">
-                    <p><strong>Patient:</strong> ${prescription.patientName}</p>
-                    <p><strong>Doctor:</strong> Dr. ${prescription.doctorName}</p>
+                    <p><strong>Patient:</strong> ${patientName}</p>
+                    <p><strong>Doctor:</strong> ${doctorName}</p>
                 </div>
                 <div class="col-12">
                     <hr>
                     <h6>Diagnosis</h6>
-                    <p>${prescription.diagnosis}</p>
+                    <p>${diagnosis}</p>
                     
                     <h6>Medications</h6>
                     <ul class="list-group mb-3">
-                        ${prescription.medications.map(med => `
-                            <li class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="mb-0">${med.name}</h6>
-                                        <small class="text-muted">Dosage: ${med.dosage}</small>
+                        ${medications.map(med => {
+                            // Map medication fields to match the API response
+                            const name = med.medicine_name || 'Unknown Medication';
+                            const dosage = med.dosage || 'Not specified';
+                            const quantity = med.quantity || '1';
+                            const duration = med.duration || 'Not specified';
+                            const frequency = med.frequency || 'Not specified';
+                            const medicineInstructions = med.instructions || 'Not specified';
+                            
+                            return `
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-0">${name}</h6>
+                                            <small class="text-muted">Dosage: ${dosage}</small>
+                                            <small class="d-block text-muted">Frequency: ${frequency}</small>
+                                            <small class="d-block text-muted">Instructions: ${medicineInstructions}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="d-block">Duration: ${duration}</small>
+                                        </div>
                                     </div>
-                                    <div class="text-end">
-                                        <small class="d-block">Quantity: ${med.quantity}</small>
-                                        <small class="d-block">Duration: ${med.duration}</small>
-                                    </div>
-                                </div>
-                            </li>
-                        `).join('')}
+                                </li>
+                            `;
+                        }).join('')}
                     </ul>
                     
                     <h6>Instructions</h6>
-                    <p>${prescription.instructions}</p>
+                    <p>${instructions}</p>
                 </div>
             </div>
         `;
@@ -341,7 +405,7 @@ window.viewPrescriptionDetails = async function(prescriptionId) {
         
         // Setup print button
         document.getElementById('printPrescription').onclick = function() {
-            printPrescription(prescription.id);
+            printPrescription(id);
         };
     } catch (error) {
         console.error('Error loading prescription details:', error);
@@ -352,3 +416,34 @@ window.viewPrescriptionDetails = async function(prescriptionId) {
 window.printPrescription = function(prescriptionId) {
     window.open(`${API_BASE_URL}/prescriptions/${prescriptionId}/print/`, '_blank');
 };
+
+// Helper function for alerts since it's missing in the code
+function showAlert(message, type) {
+    const alertContainer = document.querySelector('.alert-container') || document.createElement('div');
+    if (!document.querySelector('.alert-container')) {
+        alertContainer.className = 'alert-container position-fixed top-0 end-0 p-3';
+        document.body.appendChild(alertContainer);
+    }
+    
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    alertContainer.appendChild(alert);
+    
+    // Auto dismiss after 5 seconds
+    setTimeout(() => {
+        if (alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }
+    }, 5000);
+}
+
+// For backwards compatibility
+function showErrorAlert(message) {
+    showAlert(message, 'danger');
+}
