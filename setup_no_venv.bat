@@ -2,7 +2,7 @@
 REM Windows setup script without virtual environment
 
 echo Starting Docker containers...
-docker-compose down
+docker-compose down -v
 docker-compose up -d
 
 echo Waiting for databases to be ready...
@@ -43,5 +43,8 @@ docker exec healthcare_mongodb mongosh healthcare_medicines --quiet --eval "db.g
 docker exec healthcare_mongodb mongosh healthcare_prescriptions --quiet --eval "db.getCollectionNames()"
 docker exec healthcare_mongodb mongosh healthcare_medical_records --quiet --eval "db.getCollectionNames()"
 docker exec healthcare_mongodb mongosh healthcare_inventory --quiet --eval "db.getCollectionNames()"
+
+echo Creating sample data...
+python manage.py create_sample_data
 
 echo Setup complete! 

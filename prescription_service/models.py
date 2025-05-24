@@ -37,7 +37,7 @@ class MedicationItem(models.Model):
     instructions = models.TextField()
 
     class Meta:
-        pass
+        abstract = True
 
 
 class MedicationItemForm(forms.ModelForm):
